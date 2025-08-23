@@ -6,10 +6,10 @@
 }
 
 [data-theme="dark"] {
-  --bg-color: #1d1f1d;
+  --bg-color: #121212;
   --text-color: #e0e0e0;
   --link-color: #6fcf97;
-  --nav-color: #252925;
+  --nav-color: #0a0a0a;
 }
 
 /* Apply variables to elements */
@@ -25,4 +25,13 @@ a {
 
 a:hover {
   color: var(--link-color);
+}
+
+.permanent-marker {
+  font-family: "Permanent Marker", cursive;
+}
+
+
+.sour-gummy {
+  font-family: "Sour Gummy", sans-serif;
 }
