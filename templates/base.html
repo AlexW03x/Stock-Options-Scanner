@@ -21,13 +21,13 @@
 </style>
 <body class="w-full overflow-x-hidden min-h-auto h-auto bg-[#f2ebeb] overflow-y-auto">
     <div class="w-[100%] overflow-hidden min-h-screen h-auto">
-        {% include "navigation.html" %}
+        {% include "_navigation.html" %}
 
         <main class="sm:max-w-[85%] lg:max-w-[80%] 2xl:max-w-[70%] max-w-[95%] mx-auto">
             {% block content %}{% endblock %}
         </main>
 
-        {% include "footer.html" %}
+        {% include "_footer.html" %}
     </div>
 </body>
 </html>
