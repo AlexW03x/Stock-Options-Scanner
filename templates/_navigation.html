@@ -1,10 +1,45 @@
-<nav class="w-[90%] mx-auto rounded-lg h-[60px] bg-white drop-shadow-[0_0_10px_black]/20 flex justify-between z-[99] mt-4 overflow-hidden">
-    <img src="{{ url_for('static', filename='Logo.png') }}" draggable="false" alt="Logo" class="object-contain invert"/>
+<nav class="w-[90%] mx-auto rounded-lg min-h-[60px] bg-white drop-shadow-[0_0_10px_black]/20 sm:flex sm:justify-between z-[99] mt-4 overflow-hidden">
+    
+    <div class="space-x-2 flex flex-row justify-between items-center sm:w-auto w-[100%] h-[60px]">
+        <img src="{{ url_for('static', filename='Logo.png') }}" draggable="false" alt="Logo" class="object-contain max-h-[60px] invert cursor-pointer hover:opacity-80 transition-all ease-in duration-150"/>
 
-    <div class="space-x-8 flex justify-center items-center">
+        <p onClick="openNav()" class="text-2xl font-bold text-black pr-4 sm:hidden cursor-pointer hover:opacity-80 transition-all ease-in duration-150 px-4 py-4">⮟</p>
+    </div>
+
+    <div id="navigation" class="sm:space-x-8 sm:space-y-0 space-y-4 flex sm:flex-row flex-col justify-center items-center sm:pr-[20px] sm:pb-0 overflow-hidden sm:h-[60px]">
         <a href="/" class="text-black font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150">Home</a>
         <a href="/" class="text-black font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150">About</a>
         <a href="/" class="text-black font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150">Market Scanner</a>
         <a href="/" class="text-black font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150">Open Source</a>
     </div>
 </nav>
+
+<script>
+    let navigation = false;
+    //documentIDs
+    let navbar = document.getElementById("navigation");
+
+    //functions
+    window.onload = function () {
+        navbar.classList.add("h-[0px]");
+        navbar.classList.add("pb-[0px]");
+    }
+
+    function openNav(){
+        navigation = !navigation; //inverse of nav 
+
+        try{
+            if(navigation == true){ //opened navigation
+                navbar.classList.remove("h-[0px]", "pb-[0px]");
+                navbar.classList.add("h-[180px]", "pb-[20px]");
+            }
+            else{
+                navbar.classList.remove("h-[180px]", "pb-[20px]");
+                navbar.classList.add("h-[0px]", "pb-[0px]");
+            }
+        }
+        catch(exception){
+            console.error(exception || "Failed to change navigation CSS!");
+        }
+    }
+</script>
