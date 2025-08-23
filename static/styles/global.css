@@ -1,0 +1,28 @@
+:root {
+  --bg-color: #e2dcdc;
+  --text-color: #000000;
+  --link-color: #47a847;
+  --nav-color: #f3efef;
+}
+
+[data-theme="dark"] {
+  --bg-color: #1d1f1d;
+  --text-color: #e0e0e0;
+  --link-color: #6fcf97;
+  --nav-color: #252925;
+}
+
+/* Apply variables to elements */
+body {
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s;
+}
+
+a {
+  color: var(--text-color);
+}
+
+a:hover {
+  color: var(--link-color);
+}
