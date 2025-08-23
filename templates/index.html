@@ -1,13 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>AW's Stock Option Scanner</title>
-  <link rel="icon" type="image/icon" href="{{ url_for('static', filename='Logo.ico') }}">
-  <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="w-full overflow-hidden min-h-auto bg-[#f2ebeb]">
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block title %}Home | Market Scanner{% endblock %}
+
+{% block content %}
+  <h1 class="text-2xl font-bold mb-4">📈 Welcome to Market Scanner</h1>
+  <p>Updated: {{ data.date }}</p>
+{% endblock %}
