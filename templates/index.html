@@ -3,8 +3,23 @@
 {% block title %}Home | Market Scanner{% endblock %}
 
 {% block content %}
-    <div class="w-[100%] flex flex-col justify-center items-center mt-[120px]">
+    <div class="w-[100%] flex flex-col justify-center items-center mt-[120px] z-[0]">
         <p class="permanent-marker text-[var(--text-color)] font-[300] lg:text-4xl text-3xl text-center">Your Volatility Stock Options Scanner</p>
-        <p class="sour-gummy text-[var(--text-color)] font-[300] lg:text-2xl text-xl text-center opacity-70 mt-2 mx-4">Find the best upcoming stocks next earnings report!</p>
+        <p class="sour-gummy text-[var(--text-color)] font-[300] lg:text-2xl text-xl text-center opacity-70 mt-2 mx-4 z-[-1]">Find the best upcoming stocks next earnings report!</p>
+        <button class="sour-gummy text-[var(--text-color)] font-[400] text-lg bg-[var(--bg-main)] hover:bg-[var(--bg-main-hover)] transition-all ease-in duration-150 rounded-md px-16 py-1 mt-6 flex flex-row items-center justify-center">See Scanner 
+            <img src="{{url_for('static', filename='external-link.png')}}" alt="Link" draggable="false" class="object-contain max-h-[20px] ml-4 invert-[var(--invert)] transition-all ease-in duration-150"/>
+        </button>
+
+        <div class="w-[100%] mx-auto mt-6 rounded-lg min-h-auto flex flex-col">
+            <img src="{{url_for('static', filename='Container1.png')}}" alt="Landing Container" draggable="false" class="max-w-[100%] h-[600px]"/>
+
+            <div class="w-[90%] flex flex-col -mt-[560px] h-[520px] mx-auto rounded-lg overflow-hidden">
+                <div class="w-[100%] h-[70px] flex flex-row px-1">
+                    <img src="{{url_for('static', filename='Logo_transparent.png')}}" alt="Logo" draggable="false" class="max-w-[70px] h-[70px]"/>
+                </div>
+
+                
+            </div>
+        </div>
     </div>
 {% endblock %}

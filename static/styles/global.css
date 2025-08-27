@@ -3,6 +3,14 @@
   --text-color: #000000;
   --link-color: #47a847;
   --nav-color: #f3efef;
+
+  /* button colours */
+  --bg-main: #697068;
+  --bg-main-hover: #6cbe49;
+
+
+  /* functional */
+  --invert: 0;
 }
 
 [data-theme="dark"] {
@@ -10,6 +18,13 @@
   --text-color: #e0e0e0;
   --link-color: #6fcf97;
   --nav-color: #0a0a0a;
+
+  /* button colours */
+  --bg-main: #383d37;
+  --bg-main-hover: #59b335;
+
+  /* functional */
+  --invert: 1;
 }
 
 /* Apply variables to elements */
@@ -34,4 +49,8 @@ a:hover {
 
 .sour-gummy {
   font-family: "Sour Gummy", sans-serif;
+}
+
+.quickTransition{
+  transition: all ease-in 150ms;
 }
