@@ -9,6 +9,14 @@
   --bg-main-hover: #6cbe49;
 
 
+
+  /* text script colours */
+  --text-recommended: #00ff08;
+  --text-consider: #ff9900;
+  --text-avoid: #ff0000;
+  --text-forecast: #0099ff;
+  --text-forecast-bad: #c93360;
+
   /* functional */
   --invert: 0;
 }
@@ -22,6 +30,14 @@
   /* button colours */
   --bg-main: #383d37;
   --bg-main-hover: #59b335;
+  
+
+  /* text script colours */
+  --text-recommended: #00ff08;
+  --text-consider: #ff9900;
+  --text-avoid: #ff0000;
+  --text-forecast: #0099ff;
+  --text-forecast-bad: #c93360;
 
   /* functional */
   --invert: 1;
