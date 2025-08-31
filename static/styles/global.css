@@ -3,10 +3,12 @@
   --text-color: #000000;
   --link-color: #47a847;
   --nav-color: #f3efef;
+  --bg-overlay: #bdb9b9;
 
   /* button colours */
   --bg-main: #697068;
   --bg-main-hover: #6cbe49;
+
 
 
 
@@ -26,6 +28,7 @@
   --text-color: #e0e0e0;
   --link-color: #6fcf97;
   --nav-color: #0a0a0a;
+  --bg-overlay: #2b2a2a;
 
   /* button colours */
   --bg-main: #383d37;

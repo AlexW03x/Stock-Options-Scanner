@@ -1,3 +1,28 @@
-<div class="w-[100%] h-[500px] mt-[100px] pb-[30px] flex flex-col lg:flex-row">
-    
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<div class="w-[100%] h-[300px] mt-[-10px] pb-[30px] flex flex-col lg:flex-row">
+    <div class="w-[100%] rounded-lg min-h-auto max-h-[240px] 2xl:max-h-[150px] bg-[var(--bg-overlay)] drop-shadow-[0_0_10px_black]/20 flex flex-row justify-center items-center px-4 py-1">
+        <div class="w-[34%] h-[90%] flex flex-col justify-center">
+            <p class="sour-gummy text-[var(--text-color)] lg:text-2xl sm:text-xl text-lg opacity-80 text-center mx-2">Updated Daily</p>
+            <p class="sour-gummy text-[var(--text-color)] lg:text-lg sm:text-md text-lg opacity-50 text-center mx-2">Automatic Refresh Every 12am</p>
+        </div>
+        <div class="w-[33%] h-[90%] flex flex-col justify-center">
+            <p class="sour-gummy text-[var(--text-color)] lg:text-2xl sm:text-xl text-lg opacity-80 text-center mx-2">All Index Stocks</p>
+            <p class="sour-gummy text-[var(--text-color)] lg:text-lg sm:text-md text-lg opacity-50 text-center mx-2">Every single major & minor stocks</p>
+        </div>
+        <div class="w-[33%] h-[90%] flex flex-col justify-center">
+            <p class="sour-gummy text-[var(--text-color)] lg:text-2xl sm:text-xl text-lg opacity-80 text-center mx-2">45 Day Range</p>
+            <p class="sour-gummy text-[var(--text-color)] lg:text-lg sm:text-md text-lg opacity-50 text-center mx-2">View all forecasts upto 45 days</p>
+        </div>
+    </div>
+</div>
+
+<div class="w-[100%] h-[500px] mt-[20px] pb-[20px] flex flex-col lg:flex-row">
+    <div class="w-[100%] lg:w-[50%] min-h-auto flex flex-col order-2 lg:order-1">
+    </div>
+
+    <div class="w-[100%] lg:w-[50%] min-h-auto flex flex-col order-1 lg:order-2">
+        <canvas id="volatility_chart" aria-label="Volatility"></canvas>
+    </div>
 </div>
