@@ -3,7 +3,7 @@
   --text-color: #000000;
   --link-color: #47a847;
   --nav-color: #f3efef;
-  --bg-overlay: #bdb9b9;
+  --bg-overlay: #c7c0c0;
 
   /* button colours */
   --bg-main: #697068;
@@ -13,14 +13,15 @@
 
 
   /* text script colours */
-  --text-recommended: #00ff08;
-  --text-consider: #ff9900;
+  --text-recommended: #10b416;
+  --text-consider: #b6781c;
   --text-avoid: #ff0000;
-  --text-forecast: #0099ff;
+  --text-forecast: #0b5e96;
   --text-forecast-bad: #c93360;
 
   /* functional */
   --invert: 0;
+  --bg-invert: 1;
 }
 
 [data-theme="dark"] {
@@ -44,6 +45,7 @@
 
   /* functional */
   --invert: 1;
+  --bg-invert: 0;
 }
 
 /* Apply variables to elements */
