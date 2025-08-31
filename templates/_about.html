@@ -18,17 +18,30 @@
     </div>
 </div>
 
-<div class="w-[100%] h-[500px] pb-[20px] flex flex-col lg:flex-row">
-    <div class="w-[100%] lg:w-[50%] min-h-auto flex flex-col order-2 lg:order-1">
-        <p class="permanent-marker text-white text-xl font-semibold">Hello</p>
+<div class="w-[100%] h-[700px] lg:h-[500px] pb-[20px] sm:-mt-[80px] lg:-mt-0 flex flex-col lg:flex-row mx-auto lg:gap-x-[30px]">
+    <div class="w-[100%] lg:w-[50%] min-h-auto lg:max-h-[340px] flex flex-col order-2 lg:order-1 justify-center">
+        <p class="permanent-marker text-[var(--text-colour)] text-2xl lg:text-xl 2xl:text-2xl font-[300] text-center mt-[40px] lg:mt-0">Volatility Stock Market Scanner</p>
+        <p class="permanent-marker text-[var(--text-colour)] text-xl lg:text-lg 2xl:text-xl font-[300] text-center mt-[10px] lg:mt-0"><span class="opacity-60">Developed By </span>
+            <span class="text-[#9000ff] cursor-pointer hover:opacity-80 transition-all ease-in duration-150" onClick="openDev()">
+                AlexW03x
+            </span></p>
+
+        <p class="sour-gummy text-[var(--text-colour)] text-md font-[400] text-center mx-4 opacity-50 mt-4 break-words">
+            AW Stock Options Scanner is a Python, Flask web application designed to make recommendations on different market symbols/tickers 
+            using Implied Volatility vs Relative Volatility, Market Historic Data for Forecasting, Average Volume per Month and Gradient Coefficient for Directional Slope,
+            to determine "most likely" ideas, however trading itself is a risk and no solutions will deliver guarantee!
+        </p>
     </div>
 
     <div class="w-[100%] lg:w-[50%] min-h-auto flex flex-col order-1 lg:order-2">
-        <canvas id="volatility_chart" aria-label="Volatility"></canvas>
+        <canvas id="volatility_chart" aria-label="Volatility" class="min-w-[100%] h-[500px]"></canvas>
     </div>
 </div>
 
 <script>
+    function openDev(){
+        window.open("https://alexwalkerportfolio.vercel.app/")
+    }
     const ctx = document.getElementById('volatility_chart').getContext('2d');
     let vixChart;
 
