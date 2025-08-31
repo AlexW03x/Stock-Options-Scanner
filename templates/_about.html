@@ -1,7 +1,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
-<div class="w-[100%] h-[300px] mt-[-10px] pb-[30px] flex flex-col lg:flex-row">
+<div class="w-[100%] h-[240px] mt-[-10px] pb-[30px] flex flex-col lg:flex-row">
     <div class="w-[100%] rounded-lg min-h-auto max-h-[240px] 2xl:max-h-[150px] bg-[var(--bg-overlay)] drop-shadow-[0_0_10px_black]/20 flex flex-row justify-center items-center px-4 py-1">
         <div class="w-[34%] h-[90%] flex flex-col justify-center">
             <p class="sour-gummy text-[var(--text-color)] lg:text-2xl sm:text-xl text-lg opacity-80 text-center mx-2">Updated Daily</p>
@@ -18,11 +18,68 @@
     </div>
 </div>
 
-<div class="w-[100%] h-[500px] mt-[20px] pb-[20px] flex flex-col lg:flex-row">
+<div class="w-[100%] h-[500px] pb-[20px] flex flex-col lg:flex-row">
     <div class="w-[100%] lg:w-[50%] min-h-auto flex flex-col order-2 lg:order-1">
+        <p class="permanent-marker text-white text-xl font-semibold">Hello</p>
     </div>
 
     <div class="w-[100%] lg:w-[50%] min-h-auto flex flex-col order-1 lg:order-2">
         <canvas id="volatility_chart" aria-label="Volatility"></canvas>
     </div>
 </div>
+
+<script>
+    const ctx = document.getElementById('volatility_chart').getContext('2d');
+    let vixChart;
+
+    async function fetchVolatility() {
+        try {
+        const response = await fetch("/api/get_volatility", { cache: "no-store" });
+        const result = await response.json();
+        const data = Array.isArray(result?.volatility_data) ? result.volatility_data : []; //check if API endpoint returns intraday, historic data if not NO RESULTS FOUND
+
+        
+        const labels = data.map(d => d.Date); //map labels into appropriate sections, dates and close price of market volatility.
+        const values = data.map(d => d.Close);
+
+        if (!vixChart) { //if chart doesn't exist create new chart to docID "volatility_chart"
+            // First render
+            vixChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                label: "Volatility Index (Daily)",
+                data: values,
+                borderColor: "#0a8c15",
+                fill: false,
+                pointRadius: 0,
+                borderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                animation: true,
+                plugins: { legend: { display: true } },
+                scales: {
+                x: { display: false },     
+                y: { ticks: { autoSkip: true } }
+                }
+            }
+            });
+        } else {
+            // Update existing chart with the full dataset returned by the API
+            vixChart.data.labels = labels;
+            vixChart.data.datasets[0].data = values;
+            vixChart.update();
+        }
+        } catch (err) {
+        console.error("Fetch/update error:", err);
+        // Silently keep the last good render
+        }
+    }
+
+    // Fetch immediately and refresh every 5s
+    fetchVolatility();
+    setInterval(fetchVolatility, 5000);
+</script>
