@@ -2,4 +2,17 @@
 
     <p class="sour-gummy text-[var(--text-color)] font-[400] lg:text-3xl text-2xl text-center mt-12 mb-2">Market Scanner</p>
     <p class="sour-gummy text-[var(--text-color)] font-[400] lg:text-xl text-md text-center opacity-70 mx-4">Select Your Preferred Choice To Scan</p>
+
+
+
+    <div class="w-auto px-4 mx-auto h-[60px] rounded-md bg-[var(--bg-scanner)] mt-4 flex flex-row justify-center items-center gap-x-4 ">
+        <select id="stockList" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-2 py-1 rounded-md" onchange="">
+            <option value="nasdaq" class="bg-[var(--bg-scanner2)] text-[var(--text-color)]">NASDAQ 100</option>
+            <option value="sp500" class="bg-[var(--bg-scanner2)] text-[var(--text-color)]" selected="selected">S&P 500</option>
+            <option value="us30" class="bg-[var(--bg-scanner2)] text-[var(--text-color)]">Dow Jones Industrial Average</option>
+            <option value="custom" class="bg-[var(--bg-scanner2)] text-[var(--text-color)]">Custom (Comma Separated)</option>
+        </select>
+
+        <button class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-4 py-1 rounded-md hover:opacity-70 transition-all ease-in duration-150" onClick="">Scan</button>
+    </div>
 </div>
