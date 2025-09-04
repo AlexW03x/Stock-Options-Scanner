@@ -2,16 +2,16 @@
     <nav class="w-[90%] mx-auto rounded-lg min-h-[60px] bg-[var(--nav-color)] drop-shadow-[0_0_10px_black]/20 sm:flex sm:justify-between z-[99] mt-4 overflow-hidden">
         
         <div class="space-x-2 flex flex-row justify-between items-center sm:w-auto w-[100%] h-[60px]">
-            <img id="Logo" src="{{ url_for('static', filename='Logo.png') }}" draggable="false" alt="Logo" class="object-contain max-h-[60px] invert cursor-pointer hover:opacity-80 transition-all ease-in duration-150 px-2 py-1"/>
+            <img id="Logo" onClick="scrollToDiv('home')" src="{{ url_for('static', filename='Logo.png') }}" draggable="false" alt="Logo" class="object-contain max-h-[60px] invert cursor-pointer hover:opacity-80 transition-all ease-in duration-150 px-2 py-1"/>
 
             <p onClick="openNav()" id="navigationArrow" class="text-2xl font-bold text-[var(--text-color)] pr-4 sm:hidden cursor-pointer hover:opacity-80 transition-all ease-in duration-150 px-4 py-4 rotate-0">⮟</p>
         </div>
 
         <div id="navigation" class="sm:space-x-8 sm:space-y-0 space-y-4 flex sm:flex-row flex-col justify-center items-center sm:pr-[20px] sm:pb-0 overflow-hidden sm:h-[60px] transition-all duration-300 ease-in-out z-[99]">
-            <a onClick="scrollToDiv('home')" class="text-[var(--text-color)] font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150">Home</a>
-            <a onClick="scrollToDiv('about')" class="text-[var(--text-color)] font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150">About</a>
-            <a href="/" class="text-[var(--text-color)] font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150">Market Scanner</a>
-            <a href="https://github.com/AlexW03x/Stock-Options-Scanner" class="text-[var(--text-color)] font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150">Open Source</a>
+            <a onClick="scrollToDiv('home')" class="text-[var(--text-color)] font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150 cursor-pointer">Home</a>
+            <a onClick="scrollToDiv('about')" class="text-[var(--text-color)] font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150 cursor-pointer">About</a>
+            <a href="/" class="text-[var(--text-color)] font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150 cursor-pointer">Market Scanner</a>
+            <a href="https://github.com/AlexW03x/Stock-Options-Scanner" class="text-[var(--text-color)] font-semibold text-lg hover:text-[#47a847] transition-all ease-in duration-150 cursor-pointer">Open Source</a>
             <img onClick="changeColourMode()" id="colourMode" src="{{ url_for('static', filename='night-mode.png')}}" draggable="false" class="object-contain max-h-[40px] py-1 px-2 cursor-pointer hover:invert-[0.5] transition-all ease-in duration-150"/>
         </div>
 
@@ -127,5 +127,9 @@
             behavior: "smooth",  // smooth scroll
             block: "start"       // aligns at the top
         });
+
+        if(navigation == true){ //if navigation is open close it after clicking
+            openNav();
+        }
     }
 </script>

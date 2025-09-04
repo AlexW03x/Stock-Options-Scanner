@@ -1,7 +1,10 @@
 import datetime
 import yfinance as yf
 import pandas as pd
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
+from logic import process_stock
+from stocks import STOCK_LISTS
+import concurrent.futures
 
 app = Flask(__name__)
 
@@ -59,6 +62,40 @@ def get_volatility():
         if _LAST_SERIES:
             return jsonify({"volatility_data": _LAST_SERIES, "mode": "cached"})
         return jsonify({"volatility_data": [], "mode": "error", "message": str(e)})
+    
+    
+    
+    
+# for calculating the stock option considerations
+
+@app.route("/api/calculate")
+def calculate():
+    stock_symbols = [] #create new list of stock symbols
+    list_name = request.args.get('list')
+    custom_symbols = request.args.get('symbols')
+
+    if list_name and list_name in STOCK_LISTS:
+        stock_symbols = STOCK_LISTS[list_name]
+    elif custom_symbols:
+        stock_symbols = [s.strip().upper() for s in custom_symbols.split(',') if s.strip()]
+
+    if not stock_symbols:
+        return jsonify({"error": "No valid stock symbols provided."}), 400
+
+    results = []
+    # Using multi-thread to asynchronously fetch stock data to help quicken up the process
+    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
+        # We use a dict to map future to symbol for easier error tracking
+        future_to_stock = {executor.submit(process_stock, symbol): symbol for symbol in stock_symbols}
+        for future in concurrent.futures.as_completed(future_to_stock):
+            try:
+                result = future.result()
+                results.append(result)
+            except Exception as e:
+                stock_symbol = future_to_stock[future]
+                results.append({"symbol": stock_symbol, "error": str(e)})
+                
+    return jsonify(results)    #return results of new symbols
 
 if __name__ == "__main__":
     app.run(debug=True)
