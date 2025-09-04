@@ -1,114 +1,402 @@
 <div class="w-full min-h-[600px] h-auto flex flex-col lg:-mt-[90px] -mt-[140px]">
 
-    <p class="sour-gummy text-[var(--text-color)] font-[400] lg:text-3xl text-2xl text-center mt-12 mb-2">Market Scanner</p>
-    <p class="sour-gummy text-[var(--text-color)] font-[400] lg:text-xl text-md text-center opacity-70 mx-4">Select Your Preferred Choice To Scan</p>
+  <p class="sour-gummy text-[var(--text-color)] font-[400] lg:text-3xl text-2xl text-center mt-12 mb-2">Market Scanner</p>
+  <p class="sour-gummy text-[var(--text-color)] font-[400] lg:text-xl text-md text-center opacity-70 mx-4">Select Your Preferred Choice To Scan</p>
 
+  <div id="scannerRef" class="w-auto max-w-full px-4 mx-auto h-[60px] rounded-md bg-[var(--bg-scanner)] mt-4 flex flex-row justify-center items-center gap-x-4 ">
+    <select id="stockList" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-2 py-1 rounded-md max-w-[70%]" onchange="changeOptions()">
+      <option value="nasdaq" class="bg-[var(--bg-scanner2)] text-white">NASDAQ 100</option>
+      <option value="sp500" class="bg-[var(--bg-scanner2)] text-white" selected="selected">S&P 500</option>
+      <option value="us30" class="bg-[var(--bg-scanner2)] text-white ">Dow Jones Industrial Average</option>
+      <option value="custom" class="bg-[var(--bg-scanner2)] text-white">Custom (Comma Separated)</option>
+    </select>
 
+    <button id="scanBtn" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-4 py-1 rounded-md hover:opacity-70 transition-all ease-in duration-150">Scan</button>
+  </div>
 
-    <div id="scannerRef" class="w-auto max-w-full px-4 mx-auto h-[60px] rounded-md bg-[var(--bg-scanner)] mt-4 flex flex-row justify-center items-center gap-x-4 ">
-        <select id="stockList" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-2 py-1 rounded-md max-w-[70%]" onchange="changeOptions()">
-            <option value="nasdaq" class="bg-[var(--bg-scanner2)] text-white">NASDAQ 100</option>
-            <option value="sp500" class="bg-[var(--bg-scanner2)] text-white" selected="selected">S&P 500</option>
-            <option value="us30" class="bg-[var(--bg-scanner2)] text-white ">Dow Jones Industrial Average</option>
-            <option value="custom" class="bg-[var(--bg-scanner2)] text-white">Custom (Comma Separated)</option>
-        </select>
+  <div id="customSymbolsContainer" class="w-[90%] lg:w-[400px] sm:w-[350px] min-h-[100px] h-auto mx-auto flex flex-col hidden">
+    <textarea id="customSymbols" onChange="updateSaveCustom()" placeholder="Enter your own ticker symbols here" class="sour-gummy text-white bg-[var(--bg-scanner2)] rounded-md h-[200px] mt-4 resize-none w-[100%] px-2 py-2"></textarea>
+    <p onclick="openStocks()" class="sour-gummy text-sm text-[var(--text-color)] opacity-70 underline cursor-pointer hover:opacity-100 transition-all ease-in duration-150 mt-4 text-right">View Stock Symbols</p>
+  </div>
 
-        <button class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-4 py-1 rounded-md hover:opacity-70 transition-all ease-in duration-150" onClick="">Scan</button>
+  <!-- filters -->
+  <div class="w-full h-[60px] mt-8 flex flex-row justify-center items-center shadow-[0_0_10px_var(--bg-scanner)] rounded-md mx-auto max-w-full lg:gap-x-0 gap-x-4">
+    <div class="w-[50%] h-[100%] flex flex-row justify-center items-center text-center">
+      <p class="sour-gummy text-[var(--text-colour)] text-md mx-2 hidden sm:block">Sort By:</p>
+      <select id="sortOptions" class="sour-gummy text-md text-[var(--text-colour)] px-2 py-1 rounded-md max-w-[70%] bg-transparent">
+        <option value="default" class="text-[var(--text-colour)] bg-[var(--bg-color)]">Default</option>
+        <option value="recommend_avoid" class="text-[var(--text-colour)] bg-[var(--bg-color)]">Recommend-Avoid</option>
+        <option value="avoid_recommend" class="text-[var(--text-colour)] bg-[var(--bg-color)]">Avoid-Recommend</option>
+        <option value="next_earnings" class="text-[var(--text-colour)] bg-[var(--bg-color)]">Next Earnings Date</option>
+        <option value="highest" class="text-[var(--text-colour)] bg-[var(--bg-color)]">Highest Forecast</option>
+        <option value="lowest" class="text-[var(--text-colour)] bg-[var(--bg-color)]">Lowest Forecast</option>
+        <option value="a-z" class="text-[var(--text-colour)] bg-[var(--bg-color)]">Alphabetical A-Z</option>
+        <option value="z-a" class="text-[var(--text-colour)] bg-[var(--bg-color)]">Alphabetical Z-A</option>
+      </select>
     </div>
 
-    <div id="customSymbolsContainer" class="w-[90%] lg:w-[400px] sm:w-[350px] min-h-[100px] h-auto mx-auto flex flex-col hidden">
-        <textarea id="customSymbols" onChange="updateSaveCustom()"  placeholder="Enter your own ticker symbols here" class="sour-gummy text-[var(--text-color)] bg-[var(--bg-scanner2)] rounded-md h-[200px] mt-4 resize-none w-[100%] px-2 py-2" ></textarea>
-        <p onclick="openStocks()" class="sour-gummy text-sm text-[var(--text-color)] opacity-70 underline cursor-pointer hover:opacity-100 transition-all ease-in duration-150 mt-4 text-right">View Stock Symbols</p>
+    <div class="w-[50%] h-[100%] flex flex-row justify-center items-center text-center">
+      <p class="sour-gummy text-[var(--text-colour)] text-md mx-2 hidden sm:block">Show:</p>
+      <select id="showOptions" class="sour-gummy text-md text-[var(--text-colour)] py-1 rounded-md max-w-[70%] bg-transparent px-4">
+        <option value="10" class="text-[var(--text-colour)] bg-[var(--bg-color)]">10</option>
+        <option value="20" class="text-[var(--text-colour)] bg-[var(--bg-color)]" selected="selected">20</option>
+        <option value="30" class="text-[var(--text-colour)] bg-[var(--bg-color)]">30</option>
+        <option value="50" class="text-[var(--text-colour)] bg-[var(--bg-color)]">50</option>
+      </select>
     </div>
+  </div>
 
-    <!-- scanner region for the symbols to show on display -->
+  <!-- results -->
+  <div id="resultsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8 mb-6 mx-auto w-[90%]">
+    <!-- Cards injected here -->
+  </div>
 
-    <!-- scanner filters and settings -->
-    <div class="w-full h-[60px] mt-8 flex flex-row justify-center items-center shadow-[0_0_10px_var(--bg-scanner)] rounded-md mx-auto max-w-full lg:gap-x-0 gap-x-4">
-        <!-- sorts -->
-         <div class="w-[50%] h-[100%] flex flex-row justify-center items-center text-center">
-            <p class="sour-gummy text-[var(--text-colour)] text-md mx-2 hidden sm:block">Sort By:</p>
-            <select id="sortOptions" class="sour-gummy text-md text-[var(--text-colour)] px-2 py-1 rounded-md max-w-[70%] bg-transparent">
-                <option value="default" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Default</option>
-                <option value="recommend_avoid" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Recommend-Avoid</option>
-                <option value="avoid_recommend" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Avoid-Recommend</option>
-                <option value="highest" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Highest Forecast</option>
-                <option value="lowest" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Lowest Forecast</option>
-                <option value="a-z" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Alphabetical A-Z</option>
-                <option value="z-a" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Alphabetical Z-A</option>
-            </select>
-         </div>
-
-        <!-- maximum Showcase -->
-         <div class="w-[50%] h-[100%] flex flex-row justify-center items-center text-center">
-            <p class="sour-gummy text-[var(--text-colour)] text-md mx-2 hidden sm:block">Show:</p>
-            <select id="showOptions" class="sour-gummy text-md text-[var(--text-colour)] px-2 py-1 rounded-md max-w-[70%] bg-transparent">
-                <option value="10" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">10</option>
-                <option value="20" class=" text-[var(--text-colour)] bg-[var(--bg-color)]" selected="selected">20</option>
-                <option value="30" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">30</option>
-                <option value="50" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">50</option>
-            </select>
-         </div>
-    </div>
-
-
-
+  <!-- pagination -->
+  <div id="paginationControls" class="flex flex-row justify-center items-center gap-x-4 mb-12 hidden">
+    <button id="prevPage" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-4 py-1 rounded-md hover:opacity-70 transition-all ease-in duration-150">Prev</button>
+    <span id="pageInfo" class="sour-gummy text-[var(--text-colour)] text-md"></span>
+    <button id="nextPage" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-4 py-1 rounded-md hover:opacity-70 transition-all ease-in duration-150">Next</button>
+  </div>
 </div>
 
 <script type="text/javascript">
-    let customContainer = document.getElementById("customSymbolsContainer"); // for our custom symbols support
-    let stockDropdown = document.getElementById("stockList");
+  let customContainer = document.getElementById("customSymbolsContainer");
+  let stockDropdown = document.getElementById("stockList");
+  const scanBtn = document.getElementById("scanBtn");
+  const sortSelect = document.getElementById("sortOptions");
+  const showSelect = document.getElementById("showOptions");
+  const resultsGrid = document.getElementById("resultsGrid");
+  let currentPage = 1;
+  let totalPages = 1;
 
-    window.addEventListener("load", async function(){
-        //on load check if user has previously selected stock list from localStorage
-        if("selectedStockList" in localStorage){
-            let selectedOption = localStorage.getItem("selectedStockList");
-            stockDropdown.value = selectedOption;
+  document.getElementById("prevPage").addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderCards(currentSelection);
+    }
+  });
+  document.getElementById("nextPage").addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderCards(currentSelection);
+    }
+  });
 
-            if(selectedOption === "custom"){
-                changeOptions();
-            }
+  const LIST_MAP = {
+    nasdaq: "nasdaq100",
+    sp500: "sp500",
+    us30: "us30"
+  };
 
-            if(selectedOption === "custom" && "customSymbols" in localStorage){
-                document.getElementById("customSymbols").value = localStorage.getItem("customSymbols");
-            }
-        }
-    });
+  let lastFetched = [];
+  let currentSelection = [];
 
-    function changeOptions(){
-        let selectedOption = stockDropdown.value;
+  window.addEventListener("load", async function () {
+    if ("selectedStockList" in localStorage) {
+      stockDropdown.value = localStorage.getItem("selectedStockList");
+      if (stockDropdown.value === "custom") {
+        changeOptions();
+      }
+      if (stockDropdown.value === "custom" && "customSymbols" in localStorage) {
+        document.getElementById("customSymbols").value = localStorage.getItem("customSymbols");
+      }
+    }
+    await runScan();
+  });
 
-        if(selectedOption === "custom"){
-            customContainer.classList.remove("hidden");
-            customContainer.classList.add("flex");
-            customContainer.classList.add("animate-load_in");
-            setTimeout(() => {
-                customContainer.classList.remove("animate-load_in");
-            }, 500);
-        }
-        else if(selectedOption !== "custom"){
-            customContainer.classList.remove("flex");
-            customContainer.classList.add("animate-load_out");
-            setTimeout(() => {
-                customContainer.classList.add("hidden");
-                customContainer.classList.remove("animate-load_out");
-            }, 500);
-        }
+  scanBtn.addEventListener("click", async () => {
+    await runScan();
+  });
 
+  sortSelect.addEventListener("change", () => {
+    applySortAndShow();
+    renderCards(currentSelection);
+  });
 
-        // add selected option to localStorage for context on load 
+  showSelect.addEventListener("change", () => {
+    applySortAndShow();
+    renderCards(currentSelection);
+  });
 
-        localStorage.setItem("selectedStockList", selectedOption);
-        console.log("Selected Stock List: " + selectedOption);
+  function changeOptions() {
+    let selectedOption = stockDropdown.value;
+
+    if (selectedOption === "custom") {
+      customContainer.classList.remove("hidden");
+      customContainer.classList.add("flex");
+      customContainer.classList.add("animate-load_in");
+      setTimeout(() => {
+        customContainer.classList.remove("animate-load_in");
+      }, 500);
+    } else if (selectedOption !== "custom") {
+      customContainer.classList.remove("flex");
+      customContainer.classList.add("animate-load_out");
+      setTimeout(() => {
+        customContainer.classList.add("hidden");
+        customContainer.classList.remove("animate-load_out");
+      }, 500);
     }
 
-    function updateSaveCustom(){ //function to store our users custom symbol choices
-        let customSymbols = document.getElementById("customSymbols").value;
-        localStorage.setItem("customSymbols", customSymbols);
-        console.log("Custom Symbols Saved: " + customSymbols);
+    localStorage.setItem("selectedStockList", selectedOption);
+  }
+
+  function updateSaveCustom() {
+    let customSymbols = document.getElementById("customSymbols").value;
+    localStorage.setItem("customSymbols", customSymbols);
+  }
+
+  function openStocks() {
+    window.open("https://www.tradingview.com/markets/stocks-usa/earnings/");
+  }
+
+  async function runScan() {
+    const sel = stockDropdown.value;
+    let url = "/api/calculate";
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 60000);
+
+    const params = new URLSearchParams();
+    if (sel === "custom") {
+      const raw = (document.getElementById("customSymbols").value || "").trim();
+      if (!raw) {
+        renderInfo("Enter some symbols to scan.");
+        return;
+      }
+      params.set("symbols", raw);
+    } else {
+      const listKey = LIST_MAP[sel] || sel;
+      params.set("list", listKey);
     }
 
-    function openStocks(){
-        window.open("https://www.tradingview.com/markets/stocks-usa/earnings/");
+    renderLoading();
+
+    try {
+      const res = await fetch(`${url}?${params.toString()}`, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+      const data = await res.json();
+
+      lastFetched = Array.isArray(data) ? data : [];
+      applySortAndShow();
+      renderCards(currentSelection);
+    } catch (e) {
+      console.error(e);
+      renderError(e.message || "Failed to fetch results.");
     }
+  }
+
+  function applySortAndShow() {
+    const sortBy = sortSelect.value;
+    let arr = [...lastFetched];
+
+    // keep a copy of error messages
+    const errorItems = arr.filter(item => item.error);
+    arr = arr.filter(item => !item.error);
+
+    const recRank = (r) => {
+      if (!r) return 3;
+      const x = r.toLowerCase();
+      if (x.includes("recommend")) return 0;
+      if (x.includes("consider")) return 1;
+      if (x.includes("avoid")) return 2;
+      return 3;
+    };
+    const toNum = (v, def = 0) => (v == null || isNaN(v)) ? def : Number(v);
+    const toDate = (s) => s ? new Date(s) : null;
+
+    switch (sortBy) {
+      case "recommend_avoid":
+        arr.sort((a, b) => recRank(a.recommendation) - recRank(b.recommendation));
+        break;
+      case "avoid_recommend":
+        arr.sort((a, b) => recRank(b.recommendation) - recRank(a.recommendation));
+        break;
+      case "next_earnings":
+        const now = new Date();
+        const future = arr.filter(x => toDate(x.earnings_date_raw) && toDate(x.earnings_date_raw) >= now)
+                          .sort((a, b) => toDate(a.earnings_date_raw) - toDate(b.earnings_date_raw));
+        const past = arr.filter(x => toDate(x.earnings_date_raw) && toDate(x.earnings_date_raw) < now)
+                        .sort((a, b) => toDate(b.earnings_date_raw) - toDate(a.earnings_date_raw));
+        const noDate = arr.filter(x => !x.earnings_date_raw || isNaN(toDate(x.earnings_date_raw)));
+        arr = [...future, ...past, ...noDate];
+        break;
+      case "highest":
+        arr.sort((a, b) => toNum(b.forecasted_move, -1) - toNum(a.forecasted_move, -1));
+        break;
+      case "lowest":
+        arr.sort((a, b) => toNum(a.forecasted_move, 1e9) - toNum(b.forecasted_move, 1e9));
+        break;
+      case "a-z":
+        arr.sort((a, b) => (a.symbol || "").localeCompare(b.symbol || ""));
+        break;
+      case "z-a":
+        arr.sort((a, b) => (b.symbol || "").localeCompare(a.symbol || ""));
+        break;
+    }
+
+    currentSelection = arr;
+    currentPage = 1;
+    const maxShow = parseInt(showSelect.value, 10) || 20;
+    totalPages = Math.max(1, Math.ceil(currentSelection.length / maxShow));
+
+    // store error reason if no results
+    if (arr.length === 0 && errorItems.length > 0) {
+        currentSelection = [];
+        currentSelection.errorReason = errorItems[0].error || "Unknown error occurred";
+    }
+  }
+
+  function renderLoading() {
+    resultsGrid.innerHTML = "";
+    const n = Math.min(parseInt(showSelect.value, 10) || 12, 12);
+    for (let i = 0; i < n; i++) {
+      const skeleton = document.createElement("div");
+      skeleton.className = "rounded-lg shadow-[0_0_10px_var(--bg-scanner)] p-4 animate-pulse";
+      skeleton.innerHTML = `
+        <div class="flex flex-col items-center">
+          <div class="w-16 h-16 mb-2 bg-[var(--bg-scanner2)] rounded-full"></div>
+          <div class="w-24 h-4 mb-2 bg-[var(--bg-scanner2)] rounded"></div>
+          <div class="w-32 h-3 mb-2 bg-[var(--bg-scanner2)] rounded"></div>
+          <div class="w-20 h-4 mb-2 bg-[var(--bg-scanner2)] rounded"></div>
+          <div class="w-28 h-3 mb-2 bg-[var(--bg-scanner2)] rounded"></div>
+          <div class="w-36 h-3 bg-[var(--bg-scanner2)] rounded"></div>
+        </div>`;
+      resultsGrid.appendChild(skeleton);
+    }
+  }
+
+  function renderInfo(msg) {
+    resultsGrid.innerHTML = `
+      <div class="rounded-lg shadow-[0_0_10px_var(--bg-scanner)] p-4 col-span-full">
+        <p class="sour-gummy text-[var(--text-colour)] text-md opacity-80 text-center">${msg}</p>
+      </div>`;
+  }
+
+  function renderError(msg) {
+    resultsGrid.innerHTML = `
+      <div class="rounded-lg shadow-[0_0_10px_var(--bg-scanner)] p-4 col-span-full">
+        <p class="sour-gummy text-[var(--text-colour)] text-md opacity-80 text-center">⚠️ ${msg}</p>
+      </div>`;
+  }
+
+  function renderCards(items) {
+
+    if (items.length === 0) { //incase the logic.py shows an error such as too many requests at once please be patient etc
+        let reason = items.errorReason || null;
+        resultsGrid.innerHTML = `
+        <div class="rounded-lg shadow-[0_0_10px_var(--bg-scanner)] p-6 col-span-full text-center">
+            <p class="sour-gummy text-[var(--text-colour)] text-lg mb-2">No results found.</p>
+            ${reason ? `<p class="sour-gummy text-[var(--text-colour)] text-md opacity-70">Reason: ${escapeHtml(reason)}</p>` : ""}
+        </div>
+        `;
+        document.getElementById("paginationControls").classList.add("hidden");
+        return;
+    }
+
+    const maxShow = parseInt(showSelect.value, 10) || 20;
+    const start = (currentPage - 1) * maxShow;
+    const end = start + maxShow;
+    const subset = items.slice(start, end);
+
+    resultsGrid.innerHTML = "";
+
+    if (sortSelect.value === "next_earnings") {
+      const now = new Date();
+      const future = subset.filter(x => {
+        if (!x.earnings_date_raw) return false;
+        const d = new Date(x.earnings_date_raw);
+        return !isNaN(d) && d >= now;
+      });
+      const past = subset.filter(x => {
+        if (!x.earnings_date_raw) return false;
+        const d = new Date(x.earnings_date_raw);
+        return !isNaN(d) && d < now;
+      });
+      const noDate = subset.filter(x => !x.earnings_date_raw || isNaN(new Date(x.earnings_date_raw)));
+
+      if (future.length) {
+        resultsGrid.insertAdjacentHTML("beforeend",
+          `<div class="col-span-full text-center sour-gummy text-lg text-[var(--text-colour)] mt-2 mb-2">Future Earnings</div>`);
+        future.forEach(item => resultsGrid.appendChild(buildCard(item)));
+      }
+      if (past.length) {
+        resultsGrid.insertAdjacentHTML("beforeend",
+          `<div class="col-span-full text-center sour-gummy text-lg text-[var(--text-colour)] mt-4 mb-2">Past Earnings</div>`);
+        past.forEach(item => resultsGrid.appendChild(buildCard(item)));
+      }
+      if (noDate.length) {
+        resultsGrid.insertAdjacentHTML("beforeend",
+          `<div class="col-span-full text-center sour-gummy text-lg text-[var(--text-colour)] mt-4 mb-2">No Earnings Data</div>`);
+        noDate.forEach(item => resultsGrid.appendChild(buildCard(item)));
+      }
+    } else {
+      subset.forEach(item => resultsGrid.appendChild(buildCard(item)));
+    }
+
+    const pager = document.getElementById("paginationControls");
+    if (totalPages > 1) {
+      pager.classList.remove("hidden");
+      document.getElementById("pageInfo").textContent = `Page ${currentPage} of ${totalPages}`;
+    } else {
+      pager.classList.add("hidden");
+    }
+  }
+
+  function buildCard(item) {
+    const {
+      symbol = "—",
+      name = "",
+      logo_url = "",
+      recommendation = "",
+      earnings_date_str = "N/A",
+      forecasted_move = null,
+      volatility = null
+    } = item || {};
+
+    const forecastPct = (forecasted_move != null && !isNaN(forecasted_move))
+      ? `${Number(forecasted_move).toFixed(2)}%`
+      : "N/A";
+
+    let ivDisplay = "N/A";
+    if (volatility != null && !isNaN(volatility)) {
+      const v = Number(volatility);
+      ivDisplay = (v > 5 ? v : v * 100).toFixed(1) + "%";
+    }
+
+    const recLower = (recommendation || "").toLowerCase();
+    let recText = "⬤ " + (recommendation || "—");
+    let recClass = "text-[var(--text-colour)]";
+    if (recLower.includes("recommend")) recClass = "text-[var(--text-recommended)]";
+    else if (recLower.includes("consider")) recClass = "text-[var(--text-forecast)]";
+    else if (recLower.includes("avoid")) recClass = "text-[var(--text-colour)]";
+
+    const imgSrc = logo_url && typeof logo_url === "string"
+      ? logo_url
+      : "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+    const card = document.createElement("div");
+    card.className = "rounded-lg shadow-[0_0_10px_var(--bg-scanner)] p-4 flex flex-col justify-between";
+    card.innerHTML = `
+      <div class="flex flex-col items-center">
+        <img src="${imgSrc}" alt="Stock Logo" class="w-16 h-16 mb-2 invert" onerror="this.style.display='none'"/>
+        <h2 class="sour-gummy text-[var(--text-colour)] text-xl font-bold mb-1">${escapeHtml(symbol)}</h2>
+        <p class="sour-gummy text-[var(--text-colour)] text-md mb-2">${escapeHtml(name || "")}</p>
+        <p class="sour-gummy text-[var(--text-forecast)] text-lg font-semibold mb-1">${forecastPct !== "N/A" ? "📈 " + forecastPct : "—"}</p>
+        <p class="sour-gummy ${recClass} text-md font-semibold mb-2">${recText}</p>
+        <p class="sour-gummy text-[var(--text-colour)] text-sm opacity-70 mb-1">Next Earnings: ${earnings_date_str || "N/A"}</p>
+        <p class="sour-gummy text-[var(--text-colour)] text-sm opacity-70">Implied Volatility: ${ivDisplay}</p>
+      </div>
+    `;
+    return card;
+  }
+
+  function escapeHtml(s) {
+    return String(s || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
 </script>
