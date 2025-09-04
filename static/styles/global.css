@@ -78,6 +78,14 @@ a:hover {
   transition: all ease-in 150ms;
 }
 
+.animate-load_in {
+  animation: load_in 0.5s ease-in forwards;
+}
+
+.animate-load_out{
+  animation: load_in 0.5s ease-out reverse forwards;
+}
+
 /* Simple loading spinner */
 .loader {
   border: 5px solid #f3f3f3;
@@ -90,4 +98,9 @@ a:hover {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes load_in {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
