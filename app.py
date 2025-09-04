@@ -1,8 +1,8 @@
-import datetime
+from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
 from flask import Flask, render_template, jsonify, request
-from logic import process_stock
+from logic import process_stock, process_stock_list
 from stocks import STOCK_LISTS
 import concurrent.futures
 
@@ -11,9 +11,29 @@ app = Flask(__name__)
 # Simple in-memory cache of last good series
 _LAST_SERIES = []
 
+# caching our requests of volatility
+CACHE = {}
+
+def next_noon():
+    """Return datetime for next 12 PM local time."""
+    now = datetime.now()
+    tomorrow_noon = datetime(now.year, now.month, now.day, 12, 0)
+    if now >= tomorrow_noon:
+        tomorrow_noon += timedelta(days=1)
+    return tomorrow_noon
+
+def get_cached(key):
+    entry = CACHE.get(key)
+    if entry and datetime.now() < entry["expiry"]:
+        return entry["data"]
+    return None
+
+def set_cached(key, data):
+    CACHE[key] = {"data": data, "expiry": next_noon()}
+
 @app.route("/")
 def home():
-    today = datetime.date.today()
+    today = datetime.today().date()
     data = {"date": today, "top_stocks": ["AAPL", "TSLA", "NVDA"]}
     return render_template("index.html", data=data)
 
@@ -70,32 +90,50 @@ def get_volatility():
 
 @app.route("/api/calculate")
 def calculate():
-    stock_symbols = [] #create new list of stock symbols
-    list_name = request.args.get('list')
-    custom_symbols = request.args.get('symbols')
+    try:
+        list_name = request.args.get("list")
+        symbols = request.args.get("symbols")
 
-    if list_name and list_name in STOCK_LISTS:
-        stock_symbols = STOCK_LISTS[list_name]
-    elif custom_symbols:
-        stock_symbols = [s.strip().upper() for s in custom_symbols.split(',') if s.strip()]
+        if list_name:
+            cache_key = ("list", list_name)
+            cached = get_cached(cache_key)
+            if cached:
+                return jsonify(cached)
 
-    if not stock_symbols:
-        return jsonify({"error": "No valid stock symbols provided."}), 400
+            symbols_list = STOCK_LISTS.get(list_name, [])
+            results = process_stock_list(symbols_list)
+            set_cached(cache_key, results)
+            return jsonify(results)
 
-    results = []
-    # Using multi-thread to asynchronously fetch stock data to help quicken up the process
-    with concurrent.futures.ThreadPoolExecutor(max_workers=20) as executor:
-        # We use a dict to map future to symbol for easier error tracking
-        future_to_stock = {executor.submit(process_stock, symbol): symbol for symbol in stock_symbols}
-        for future in concurrent.futures.as_completed(future_to_stock):
-            try:
-                result = future.result()
-                results.append(result)
-            except Exception as e:
-                stock_symbol = future_to_stock[future]
-                results.append({"symbol": stock_symbol, "error": str(e)})
-                
-    return jsonify(results)    #return results of new symbols
+        elif symbols:
+            requested = [s.strip().upper() for s in symbols.split(",")]
+            results = []
+            to_fetch = []
+
+            for sym in requested:
+                cached = get_cached(("symbol", sym))
+                if cached:
+                    results.append(cached)
+                else:
+                    to_fetch.append(sym)
+
+            if to_fetch:
+                fetched = process_stock_list(to_fetch)
+                for res in fetched:
+                    if "error" not in res:
+                        set_cached(("symbol", res["symbol"]), res)
+                    results.append(res)
+
+            return jsonify(results)
+
+        else:
+            return jsonify({"error": "No list or symbols provided"}), 400
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()   # print full error to server logs
+        return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True)

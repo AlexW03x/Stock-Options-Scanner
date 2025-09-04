@@ -379,7 +379,6 @@
     card.className = "rounded-lg shadow-[0_0_10px_var(--bg-scanner)] p-4 flex flex-col justify-between";
     card.innerHTML = `
       <div class="flex flex-col items-center">
-        <img src="${imgSrc}" alt="Stock Logo" class="w-16 h-16 mb-2 invert" onerror="this.style.display='none'"/>
         <h2 class="sour-gummy text-[var(--text-colour)] text-xl font-bold mb-1">${escapeHtml(symbol)}</h2>
         <p class="sour-gummy text-[var(--text-colour)] text-md mb-2">${escapeHtml(name || "")}</p>
         <p class="sour-gummy text-[var(--text-forecast)] text-lg font-semibold mb-1">${forecastPct !== "N/A" ? "📈 " + forecastPct : "—"}</p>
