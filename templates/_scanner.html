@@ -5,7 +5,7 @@
 
 
 
-    <div class="w-auto max-w-full px-4 mx-auto h-[60px] rounded-md bg-[var(--bg-scanner)] mt-4 flex flex-row justify-center items-center gap-x-4 ">
+    <div id="scannerRef" class="w-auto max-w-full px-4 mx-auto h-[60px] rounded-md bg-[var(--bg-scanner)] mt-4 flex flex-row justify-center items-center gap-x-4 ">
         <select id="stockList" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-2 py-1 rounded-md max-w-[70%]" onchange="changeOptions()">
             <option value="nasdaq" class="bg-[var(--bg-scanner2)] text-white">NASDAQ 100</option>
             <option value="sp500" class="bg-[var(--bg-scanner2)] text-white" selected="selected">S&P 500</option>
@@ -17,14 +17,63 @@
     </div>
 
     <div id="customSymbolsContainer" class="w-[90%] lg:w-[400px] sm:w-[350px] min-h-[100px] h-auto mx-auto flex flex-col hidden">
-        <textarea id="customSymbols" placeholder="Enter your own ticker symbols here" class="sour-gummy text-[var(--text-color)] bg-[var(--bg-scanner2)] rounded-md h-[200px] mt-4 resize-none w-[100%] px-2 py-2" ></textarea>
-        <p onclick="" class="sour-gummy text-sm text-[var(--text-color)] opacity-70 underline cursor-pointer hover:opacity-100 transition-all ease-in duration-150 mt-4 text-right">View Stock Symbols</p>
+        <textarea id="customSymbols" onChange="updateSaveCustom()"  placeholder="Enter your own ticker symbols here" class="sour-gummy text-[var(--text-color)] bg-[var(--bg-scanner2)] rounded-md h-[200px] mt-4 resize-none w-[100%] px-2 py-2" ></textarea>
+        <p onclick="openStocks()" class="sour-gummy text-sm text-[var(--text-color)] opacity-70 underline cursor-pointer hover:opacity-100 transition-all ease-in duration-150 mt-4 text-right">View Stock Symbols</p>
     </div>
+
+    <!-- scanner region for the symbols to show on display -->
+
+    <!-- scanner filters and settings -->
+    <div class="w-full h-[60px] mt-8 flex flex-row justify-center items-center shadow-[0_0_10px_var(--bg-scanner)] rounded-md mx-auto max-w-full lg:gap-x-0 gap-x-4">
+        <!-- sorts -->
+         <div class="w-[50%] h-[100%] flex flex-row justify-center items-center text-center">
+            <p class="sour-gummy text-[var(--text-colour)] text-md mx-2 hidden sm:block">Sort By:</p>
+            <select id="sortOptions" class="sour-gummy text-md text-[var(--text-colour)] px-2 py-1 rounded-md max-w-[70%] bg-transparent">
+                <option value="default" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Default</option>
+                <option value="recommend_avoid" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Recommend-Avoid</option>
+                <option value="avoid_recommend" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Avoid-Recommend</option>
+                <option value="highest" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Highest Forecast</option>
+                <option value="lowest" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Lowest Forecast</option>
+                <option value="a-z" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Alphabetical A-Z</option>
+                <option value="z-a" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">Alphabetical Z-A</option>
+            </select>
+         </div>
+
+        <!-- maximum Showcase -->
+         <div class="w-[50%] h-[100%] flex flex-row justify-center items-center text-center">
+            <p class="sour-gummy text-[var(--text-colour)] text-md mx-2 hidden sm:block">Show:</p>
+            <select id="showOptions" class="sour-gummy text-md text-[var(--text-colour)] px-2 py-1 rounded-md max-w-[70%] bg-transparent">
+                <option value="10" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">10</option>
+                <option value="20" class=" text-[var(--text-colour)] bg-[var(--bg-color)]" selected="selected">20</option>
+                <option value="30" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">30</option>
+                <option value="50" class=" text-[var(--text-colour)] bg-[var(--bg-color)]">50</option>
+            </select>
+         </div>
+    </div>
+
+
+
 </div>
 
 <script type="text/javascript">
     let customContainer = document.getElementById("customSymbolsContainer"); // for our custom symbols support
     let stockDropdown = document.getElementById("stockList");
+
+    window.addEventListener("load", async function(){
+        //on load check if user has previously selected stock list from localStorage
+        if("selectedStockList" in localStorage){
+            let selectedOption = localStorage.getItem("selectedStockList");
+            stockDropdown.value = selectedOption;
+
+            if(selectedOption === "custom"){
+                changeOptions();
+            }
+
+            if(selectedOption === "custom" && "customSymbols" in localStorage){
+                document.getElementById("customSymbols").value = localStorage.getItem("customSymbols");
+            }
+        }
+    });
 
     function changeOptions(){
         let selectedOption = stockDropdown.value;
@@ -45,5 +94,21 @@
                 customContainer.classList.remove("animate-load_out");
             }, 500);
         }
+
+
+        // add selected option to localStorage for context on load 
+
+        localStorage.setItem("selectedStockList", selectedOption);
+        console.log("Selected Stock List: " + selectedOption);
+    }
+
+    function updateSaveCustom(){ //function to store our users custom symbol choices
+        let customSymbols = document.getElementById("customSymbols").value;
+        localStorage.setItem("customSymbols", customSymbols);
+        console.log("Custom Symbols Saved: " + customSymbols);
+    }
+
+    function openStocks(){
+        window.open("https://www.tradingview.com/markets/stocks-usa/earnings/");
     }
 </script>
