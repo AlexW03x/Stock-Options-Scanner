@@ -9,4 +9,8 @@
     {% include "_about.html" %} <!-- About Page Part -->
 
     {% include "_scanner.html" %} <!-- Scanner Page Part -->
+
+<script>
+    const STOCK_LISTS = JSON.parse('{{ data.stock_lists_json|safe }}');
+</script>
 {% endblock %}

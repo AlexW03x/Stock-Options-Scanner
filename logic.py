@@ -3,194 +3,171 @@ import numpy as np
 import pandas as pd
 import math
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
+from scipy.interpolate import interp1d
+from typing import List, Dict, Tuple, Any, Callable, Optional
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-# -------------------------------
-# Black-Scholes Model
-# -------------------------------
-def norm_cdf(x):
-    return (1.0 + math.erf(x / math.sqrt(2.0))) / 2.0
-
-def black_scholes_price(S, K, T, r, sigma, option_type="call"):
-    if T <= 0 or sigma <= 0 or S <= 0 or K <= 0:
-        return 0.0
-
-    d1 = (math.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * math.sqrt(T))
-    d2 = d1 - sigma * math.sqrt(T)
-
-    if option_type == "call":
-        return S * norm_cdf(d1) - K * math.exp(-r * T) * norm_cdf(d2)
-    else:
-        return K * math.exp(-r * T) * norm_cdf(-d2) - S * norm_cdf(-d1)
+# --- Configuration Constants from calculator.py ---
+MIN_AVG_VOLUME = 1_500_000
+MIN_IV_RV_RATIO = 1.25
+MAX_TS_SLOPE = -0.00406
+FUTURE_DATE_CUTOFF_DAYS = 45
+HISTORICAL_DATA_PERIOD = '3mo'
+VOLATILITY_WINDOW = 30
 
 # -------------------------------
-# Core Stock Processing
+# Helper Functions from calculator.py
+# -------------------------------
+
+def yang_zhang(price_data: pd.DataFrame, window: int = VOLATILITY_WINDOW, trading_periods: int = 252) -> float:
+    """Calculates the Yang-Zhang historical volatility."""
+    log_ho = np.log(price_data['High'] / price_data['Open'])
+    log_lo = np.log(price_data['Low'] / price_data['Open'])
+    log_co = np.log(price_data['Close'] / price_data['Open'])
+    
+    log_oc = np.log(price_data['Open'] / price_data['Close'].shift(1))
+    
+    rs = log_ho * (log_ho - log_co) + log_lo * (log_lo - log_co)
+    
+    close_vol = (log_oc**2).rolling(window=window).sum() * (1.0 / (window - 1.0))
+    open_vol = rs.rolling(window=window).sum() * (1.0 / (window - 1.0))
+    
+    k = 0.34 / (1.34 + (window + 1) / (window - 1))
+    result = np.sqrt(close_vol + k * open_vol + (1 - k) * rs) * np.sqrt(trading_periods)
+    
+    # Return the last value, ensuring it's not NaN
+    return result.dropna().iloc[-1] if not result.dropna().empty else 0.0
+
+def build_term_structure(days: List[int], ivs: List[float]) -> Callable[[int], float]:
+    """Builds a spline for interpolating implied volatility."""
+    if not days or not ivs or len(days) < 2:
+        # Return a lambda that always gives 0 if there's not enough data
+        return lambda dte: 0.0
+        
+    days_np, ivs_np = np.array(days), np.array(ivs)
+
+    sort_idx = days_np.argsort()
+    days_sorted, ivs_sorted = days_np[sort_idx], ivs_np[sort_idx]
+
+    spline = interp1d(days_sorted, ivs_sorted, kind='linear', fill_value="extrapolate")
+    return lambda dte: float(spline(dte))
+
+# -------------------------------
+# Core Stock Processing (Updated)
 # -------------------------------
 def process_stock(symbol):
-    """
-    Process a single stock symbol with robust error handling.
-    Returns a dictionary with result fields or an 'error'.
-    """
     try:
         ticker = yf.Ticker(symbol)
-
-        # Fetch info & calendar concurrently
-        with ThreadPoolExecutor() as executor:
-            future_info = executor.submit(lambda: ticker.info)
-            future_calendar = executor.submit(lambda: ticker.calendar)
-
-            info = future_info.result() or {}
-            calendar = future_calendar.result() or {}
-
+        info = ticker.info or {}
+        
         name = info.get("longName") or info.get("shortName") or symbol
         logo_url = info.get("logo_url", "")
 
-        # Market data
-        hist = ticker.history(period="1y", interval="1d")
-        if hist.empty:
-            return {"symbol": symbol, "error": "No historical data found."}
+        # --- Data Fetching ---
+        price_history = ticker.history(period=HISTORICAL_DATA_PERIOD)
+        if price_history.empty:
+            return {"symbol": symbol, "error": "No price history."}
 
-        underlying_price = hist["Close"].iloc[-1]
+        underlying_price = price_history['Close'].iloc[-1]
+        
+        exp_dates = list(ticker.options)
+        if not exp_dates:
+            return {"symbol": symbol, "error": "No options contracts."}
 
-        # Realized volatility (30-day)
-        log_returns = np.log(hist["Close"] / hist["Close"].shift(1)).dropna()
-        rv30 = log_returns.rolling(window=30).std().iloc[-1] * np.sqrt(252)
+        # --- Calculations ---
+        atm_iv = {}
+        straddle_price = None
+        today = datetime.today().date()
+        
+        # We only need the first few expiration dates
+        for i, exp_date in enumerate(exp_dates[:4]): # Limit to first 4 expirations for speed
+            try:
+                chain = ticker.option_chain(exp_date)
+            except Exception:
+                continue # Skip if a single chain fails
 
-        # Option chain
-        expirations = ticker.options
-        if not expirations:
-            return {"symbol": symbol, "error": "No options data available."}
+            calls, puts = chain.calls, chain.puts
+            if calls.empty or puts.empty:
+                continue
 
-        front_expiry = expirations[0]
-        try:
-            opt_chain = ticker.option_chain(front_expiry)
-            calls = opt_chain.calls
-            puts = opt_chain.puts
-        except Exception:
-            return {"symbol": symbol, "error": "Error fetching option chain."}
+            atm_call = calls.iloc[(calls['strike'] - underlying_price).abs().idxmin()]
+            atm_put = puts.iloc[(puts['strike'] - underlying_price).abs().idxmin()]
 
-        if calls.empty or puts.empty:
-            return {"symbol": symbol, "error": "Incomplete option chain."}
+            avg_iv = (atm_call['impliedVolatility'] + atm_put['impliedVolatility']) / 2.0
+            d_obj = datetime.strptime(exp_date, "%Y-%m-%d").date()
+            dte = (d_obj - today).days
+            if dte > 0: # Only consider future dates
+                atm_iv[dte] = avg_iv
 
-        # ATM strike
-        atm_strike = min(
-            calls["strike"],
-            key=lambda k: abs(k - underlying_price),
-        )
+            # Calculate straddle for the nearest expiration
+            if i == 0:
+                call_mid = (atm_call['bid'] + atm_call['ask']) / 2.0
+                put_mid = (atm_put['bid'] + atm_put['ask']) / 2.0
+                if call_mid > 0 and put_mid > 0:
+                    straddle_price = call_mid + put_mid
 
-        # Calls & puts near ATM
-        atm_calls = calls[calls["strike"] == atm_strike]
-        atm_puts = puts[puts["strike"] == atm_strike]
-
-        if atm_calls.empty or atm_puts.empty:
-            return {"symbol": symbol, "error": "Could not find ATM options."}
-
-        # Safe extraction
-        try:
-            call_bid = float(atm_calls["bid"].iloc[0] or 0)
-            call_ask = float(atm_calls["ask"].iloc[0] or 0)
-            put_bid = float(atm_puts["bid"].iloc[0] or 0)
-            put_ask = float(atm_puts["ask"].iloc[0] or 0)
-        except Exception:
-            return {"symbol": symbol, "error": "Error parsing bid/ask."}
-
-        call_mid = (call_bid + call_ask) / 2
-        put_mid = (put_bid + put_ask) / 2
-
-        # Days to expiry
-        expiry_dt = pd.to_datetime(front_expiry)
-        T = max((expiry_dt - datetime.now()).days / 365, 1 / 365)
-
-        # Risk-free rate
-        r = 0.05
-
-        # Implied vols
-        call_iv = atm_calls["impliedVolatility"].iloc[0]
-        put_iv = atm_puts["impliedVolatility"].iloc[0]
-        iv30 = (call_iv + put_iv) / 2 if not (pd.isna(call_iv) or pd.isna(put_iv)) else None
-
-        if iv30 is None or iv30 <= 0:
+        if not atm_iv:
             return {"symbol": symbol, "error": "Could not determine ATM IV."}
 
-        # Expected move (1 std deviation)
-        forecasted_move = underlying_price * iv30 * math.sqrt(T)
+        dtes, ivs = list(atm_iv.keys()), list(atm_iv.values())
+        term_spline = build_term_structure(dtes, ivs)
+        
+        # Term structure slope (0 to 45 days)
+        ts_slope_0_45 = (term_spline(45) - term_spline(min(dtes))) / (45 - min(dtes)) if min(dtes) < 45 else 0.0
 
-        # Relative value: IV vs RV
-        rel_value = iv30 / rv30 if rv30 and rv30 > 0 else None
+        # IV / RV Ratio
+        rv = yang_zhang(price_history)
+        iv30_rv30 = term_spline(30) / rv if rv > 0 else 0.0
+        
+        # 30-day average volume
+        avg_volume = price_history['Volume'].rolling(30).mean().iloc[-1]
 
-        # Earnings date extraction
-        earnings_date = None
+        # Expected move from straddle
+        forecasted_move_pct = (straddle_price / underlying_price * 100) if straddle_price else 0.0
+
+        # --- Recommendation Logic from calculator.py ---
+        avg_volume_bool = avg_volume >= MIN_AVG_VOLUME
+        iv30_rv30_bool = iv30_rv30 >= MIN_IV_RV_RATIO
+        ts_slope_bool = ts_slope_0_45 <= MAX_TS_SLOPE
+
+        if avg_volume_bool and iv30_rv30_bool and ts_slope_bool:
+            recommendation = "Recommend"
+        elif ts_slope_bool and (avg_volume_bool or iv30_rv30_bool):
+            recommendation = "Consider"
+        else:
+            recommendation = "Avoid"
+            
+        # Earnings date
         try:
-            if isinstance(calendar, dict):
-                val = calendar.get("Earnings Date")
-                if isinstance(val, (list, tuple)) and val:
-                    earnings_date = val[0]
-                else:
-                    earnings_date = val
-            elif hasattr(calendar, "to_dict"):
-                cal_dict = calendar.to_dict()
-                for k, v in cal_dict.items():
-                    if "earn" in str(k).lower():
-                        earnings_date = v[0] if isinstance(v, (list, tuple)) and v else v
-                        break
-                if earnings_date is None and cal_dict:
-                    first = list(cal_dict.values())[0]
-                    earnings_date = first[0] if isinstance(first, (list, tuple)) and first else first
-            else:
-                get_fn = getattr(calendar, "get", None)
-                if callable(get_fn):
-                    earnings_date = get_fn("Earnings Date", None)
-                    if isinstance(earnings_date, (list, tuple)) and earnings_date:
-                        earnings_date = earnings_date[0]
+            earnings_date = pd.to_datetime(ticker.calendar.get('Earnings Date', [None])[0])
+            earnings_date_str = earnings_date.strftime("%Y-%m-%d") if not pd.isna(earnings_date) else "N/A"
+            earnings_date_raw = earnings_date.isoformat() if not pd.isna(earnings_date) else None
         except Exception:
-            earnings_date = None
-
-        # Normalize earnings_date
-        if earnings_date is not None:
-            try:
-                if hasattr(earnings_date, "to_pydatetime"):
-                    earnings_date = earnings_date.to_pydatetime()
-                elif not isinstance(earnings_date, datetime):
-                    earnings_date = pd.to_datetime(earnings_date)
-                    if pd.isna(earnings_date):
-                        earnings_date = None
-                    else:
-                        earnings_date = earnings_date.to_pydatetime()
-            except Exception:
-                earnings_date = None
-
-        # Recommendation
-        recommendation = (
-            "Recommend"
-            if rel_value and rel_value > 1.2
-            else "Avoid" if rel_value and rel_value < 0.8
-            else "Consider"
-        )
+            earnings_date_str = "N/A"
+            earnings_date_raw = None
 
         return {
             "symbol": symbol,
             "name": name,
             "logo_url": logo_url,
             "price": underlying_price,
-            "rv30": rv30,
-            "iv30": iv30,
-            "forecasted_move": forecasted_move,
-            "volatility": rel_value,
-            "earnings_date_str": earnings_date.strftime("%Y-%m-%d") if earnings_date else "N/A",
-            "earnings_date_raw": earnings_date.isoformat() if earnings_date else None,
+            "forecasted_move": forecasted_move_pct,
+            "volatility": iv30_rv30, 
+            "earnings_date_str": earnings_date_str,
+            "earnings_date_raw": earnings_date_raw,
             "recommendation": recommendation,
         }
 
     except Exception as e:
-        return {"symbol": symbol, "error": f"A processing error occurred: {str(e)}"}
+        return {"symbol": symbol, "error": f"Processing error: {str(e)}"}
 
 # -------------------------------
-# Batch Processing
+# Batch Processing (No changes needed)
 # -------------------------------
 def process_stock_list(symbols):
     results = []
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    with ThreadPoolExecutor(max_workers=10) as executor:
         future_to_symbol = {executor.submit(process_stock, sym): sym for sym in symbols}
         for future in as_completed(future_to_symbol):
             try:

@@ -2,6 +2,7 @@
 
   <p class="sour-gummy text-[var(--text-color)] font-[400] lg:text-3xl text-2xl text-center mt-12 mb-2">Market Scanner</p>
   <p class="sour-gummy text-[var(--text-color)] font-[400] lg:text-xl text-md text-center opacity-70 mx-4">Select Your Preferred Choice To Scan</p>
+  <p class="sour-gummy text-[var(--text-avoid)] font-[300] lg:text-md text-sm text-center mx-4 mt-2">⚠️ Rate Limitting Applies | SP500 is the max requests per 5 minutes!</p>
 
   <div id="scannerRef" class="w-auto max-w-full px-4 mx-auto h-[60px] rounded-md bg-[var(--bg-scanner)] mt-4 flex flex-row justify-center items-center gap-x-4 ">
     <select id="stockList" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-2 py-1 rounded-md max-w-[70%]" onchange="changeOptions()">
@@ -101,8 +102,14 @@
         document.getElementById("customSymbols").value = localStorage.getItem("customSymbols");
       }
     }
-
+    // This will now run only once on page load
     await runScan();
+  });
+
+  // *** FIX 1: Add event listener for the main dropdown ***
+  stockDropdown.addEventListener("change", () => {
+      changeOptions(); // This handles showing/hiding the custom input
+      applyFiltersAndRender(); // This re-filters and shows the correct stocks
   });
 
   scanBtn.addEventListener("click", async () => {
@@ -151,7 +158,6 @@
   async function runScan() {
     renderLoading();
     try {
-        // 1. Try to get data from browser's local storage
         const cachedData = localStorage.getItem('allStocksData');
         if (cachedData) {
             all_stocks_data = JSON.parse(cachedData);
@@ -159,7 +165,6 @@
             return;
         }
 
-        // 2. If not in local storage, fetch from the server
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 60000);
 
@@ -170,7 +175,6 @@
         const data = await res.json();
         all_stocks_data = data;
         
-        // 3. Store the fetched data in local storage
         localStorage.setItem('allStocksData', JSON.stringify(all_stocks_data));
         applyFiltersAndRender();
 
@@ -192,8 +196,9 @@
         }
         symbols_to_display = raw.split(",").map(s => s.trim());
     } else {
-        const listKey = LIST_MAP[sel] || sel;
-        symbols_to_display = Object.keys(all_stocks_data); 
+        // *** FIX 2: Use the STOCK_LISTS variable we passed from Python ***
+        const listKey = LIST_MAP[sel]; // e.g., 'nasdaq' -> 'nasdaq100'
+        symbols_to_display = STOCK_LISTS[listKey] || [];
     }
     
     let filtered_data = [];
@@ -203,8 +208,8 @@
         }
     }
 
+    // ... (The rest of the function for sorting and rendering remains exactly the same)
     const sortBy = sortSelect.value;
-
     const recRank = (r) => {
       if (!r) return 3;
       const x = r.toLowerCase();
@@ -253,6 +258,7 @@
     renderCards(currentSelection);
   }
 
+  // ... (renderLoading, renderInfo, renderError, renderCards, buildCard, and escapeHtml functions remain the same)
   function renderLoading() {
     resultsGrid.innerHTML = "";
     const n = Math.min(parseInt(showSelect.value, 10) || 12, 12);
@@ -404,4 +410,5 @@
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
+
 </script>

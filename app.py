@@ -2,15 +2,14 @@ from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
 from flask import Flask, render_template, jsonify, request
-from logic import process_stock, process_stock_list
+from logic import process_stock_list # Updated logic.py from previous step
 from stocks import STOCK_LISTS
 import concurrent.futures
+import json # Import the json library
 
 app = Flask(__name__)
 
-# Simple in-memory cache of last good series
-_LAST_SERIES = []
-
+# ... (caching functions remain the same) ...
 # Caching our requests of volatility
 CACHE = {}
 # Create a new cache for all stock data
@@ -23,15 +22,6 @@ def next_noon():
     tomorrow_midnight = datetime(now.year, now.month, now.day) + timedelta(days=1)
     return tomorrow_midnight
 
-def get_cached(key):
-    entry = CACHE.get(key)
-    if entry and datetime.now() < entry["expiry"]:
-        return entry["data"]
-    return None
-
-def set_cached(key, data):
-    CACHE[key] = {"data": data, "expiry": next_noon()}
-
 def get_all_stocks_cached():
     """Get all stocks from the cache if not expired."""
     entry = ALL_STOCKS_CACHE.get("all_stocks")
@@ -43,11 +33,19 @@ def set_all_stocks_cached(data):
     """Set the cache for all stocks."""
     ALL_STOCKS_CACHE["all_stocks"] = {"data": data, "expiry": next_noon()}
 
+
 @app.route("/")
 def home():
     today = datetime.today().date()
-    data = {"date": today, "top_stocks": ["AAPL", "TSLA", "NVDA"]}
+    data = {
+        "date": today, 
+        "top_stocks": ["AAPL", "TSLA", "NVDA"],
+        # Add this line to pass the stock lists as a JSON string
+        "stock_lists_json": json.dumps(STOCK_LISTS)
+    }
     return render_template("index.html", data=data)
+
+# ... (get_volatility and calculate endpoints remain the same) ...
 
 @app.route("/api/get_volatility")
 def get_volatility():
