@@ -6,11 +6,12 @@
   --bg-overlay: #c7c0c0;
   --bg-scanner: #6e696e;
   --bg-scanner2: #524d52;
+  --bg-opensource: #bbb4b4;
+  --dropshadow: #a662ac;
 
   /* button colours */
   --bg-main: #697068;
   --bg-main-hover: #6cbe49;
-
 
 
 
@@ -20,6 +21,7 @@
   --text-avoid: #ff0000;
   --text-forecast: #0b5e96;
   --text-forecast-bad: #c93360;
+  --credit: #2f044d;
 
   /* functional */
   --invert: 0;
@@ -32,6 +34,8 @@
   --link-color: #6fcf97;
   --nav-color: #0a0a0a;
   --bg-overlay: #2b2a2a;
+  --bg-opensource: #1a1919;
+  --dropshadow: #89cc83;
 
   /* button colours */
   --bg-main: #383d37;
@@ -44,6 +48,7 @@
   --text-avoid: #ff0000;
   --text-forecast: #0099ff;
   --text-forecast-bad: #c93360;
+  --credit: #9349c7;
 
   /* functional */
   --invert: 1;

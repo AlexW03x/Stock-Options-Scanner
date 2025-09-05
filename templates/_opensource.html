@@ -1,0 +1,26 @@
+<div id="opensource" class="w-[100%] bg-[var(--bg-opensource)] min-h-[600px] h-auto mx-auto mt-4 rounded-lg mb-[100px] pb-[50px] drop-shadow-[0_0_5px_var(--dropshadow)]">
+    <div class="flex flex-row items-center justify-center h-[60px] w-full px-2">
+        <p class="sour-gummy text-lg sm:text-xl lg:text-2xl text-[var(--text-colour)] font-bold">Open Source | Market Scanner</p>
+        <p class="sour-gummy text-sm sm:text-md text-[var(--text-colour)] ml-4 sm:mt-1"><span class="animate-pulse text-[var(--dropshadow)]">⬤</span> v1.0.0</p>
+    </div>
+
+    <p class="sour-gummy text-[var(--text-colour)] text-center mx-4 text-sm opacity-70">Developer: Alex Walker (AlexW03x) in extension to: Volatility Vibes' Original Work</p>
+
+    <div class="2xl:w-[30%] lg:w-[40%] w-[50%] mx-auto gap-x-4 grid grid-cols-4">
+        <img src="{{ url_for('static', filename='html.png') }}" draggable="false" class="object-contain max-h-[40px] invert-[var(--invert)] col-span-1 mx-auto mt-8"/>
+        <img src="{{ url_for('static', filename='tailwindcss.png') }}" draggable="false" class="object-contain max-h-[40px] col-span-1 mx-auto mt-8 brightness-[500] saturate-[0] invert-[var(--bg-invert)]"/>
+        <img src="{{ url_for('static', filename='java-script.png') }}" draggable="false" class="object-contain max-h-[40px] invert-[var(--invert)] col-span-1 mx-auto mt-8 "/>
+        <img src="{{ url_for('static', filename='python.png') }}" draggable="false" class="object-contain max-h-[40px] invert-[var(--invert)] col-span-1 mx-auto mt-8"/>
+    </div>
+
+    <div class="w-[90%] sm:w-[70%] mx-auto mt-8">
+        <p class="sour-gummy text-[var(--text-colour)] text-center text-sm mb-4 mx-4">This project is 100% open sourced and available on GitHub, it is free to 
+            use and modify at your own discretion. Please ensure to read the repository's README and License before using or modifying the code.
+            <br/><br/>Special thanks to <span class="text-[var(--credit)] font-bold cursor-pointer hover:opacity-70 transition-all ease-in duration-150" onClick="window.open('https://volatilityvibes.com/');">
+                Volatility Vibes</span> 
+                for the original idea and original scanner code, which I have improved and expanded upon for my own work delivering a 
+                suitable double cache system market scanner that saves user preference history and previous scan data. I have also included
+                 a python script that can be used as an external application too if the user prefers to use that instead.
+        </p>
+    </div>
+</div>
