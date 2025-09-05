@@ -13,6 +13,8 @@ CACHE = {} #original cache for single stock data
 
 ALL_STOCKS_CACHE = {} #cache for all stocks data in the form of a dictionary for better information extraction and storage
 
+_LAST_SERIES = None # Initialize _LAST_SERIES to None
+
 def next_noon():
     """Return datetime for next 12 PM local time."""
     now = datetime.now()
