@@ -165,17 +165,55 @@ def process_stock(symbol):
 # -------------------------------
 # Batch Processing (No changes needed)
 # -------------------------------
+# in logic.py
+import yfinance as yf
+import pandas as pd
+import numpy as np
+from datetime import datetime
+import concurrent.futures
+import time # <-- IMPORT TIME
+
+# ... (keep your existing process_stock function with the new print statements) ...
+
 def process_stock_list(symbols):
+    """
+    Processes a list of stock symbols in parallel with retries for failed symbols.
+    """
     results = []
-    with ThreadPoolExecutor(max_workers=10) as executor:
-        future_to_symbol = {executor.submit(process_stock, sym): sym for sym in symbols}
-        for future in as_completed(future_to_symbol):
-            try:
-                res = future.result()
-                results.append(res)
-            except Exception as e:
-                results.append({
-                    "symbol": future_to_symbol[future],
-                    "error": f"A processing error occurred: {str(e)}"
-                })
+    MAX_RETRIES = 2
+    RETRY_DELAY = 1 # seconds
+
+    symbols_to_process = list(symbols)
+
+    for attempt in range(MAX_RETRIES + 1):
+        if not symbols_to_process:
+            break # Exit if all symbols are processed
+
+        print(f"\n--- Attempt {attempt + 1} of {MAX_RETRIES + 1} for {len(symbols_to_process)} symbols ---")
+
+        failed_symbols = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            future_to_symbol = {executor.submit(process_stock, symbol): symbol for symbol in symbols_to_process}
+            for future in concurrent.futures.as_completed(future_to_symbol):
+                symbol = future_to_symbol[future]
+                try:
+                    result = future.result()
+                    # Only add successful results or results with non-retryable errors
+                    if "error" not in result or "No historical data found" in result["error"]:
+                         results.append(result)
+                    else:
+                        # This was a network error or similar, so we should retry
+                        failed_symbols.append(symbol)
+                except Exception as exc:
+                    print(f"Exception for {symbol}: {exc}")
+                    failed_symbols.append(symbol)
+
+        if failed_symbols:
+            print(f"Retrying {len(failed_symbols)} failed symbols in {RETRY_DELAY} seconds...")
+            symbols_to_process = failed_symbols # Set the list for the next attempt
+            time.sleep(RETRY_DELAY)
+        else:
+            print("All symbols processed successfully.")
+            break # No failures, exit the loop
+
     return results
