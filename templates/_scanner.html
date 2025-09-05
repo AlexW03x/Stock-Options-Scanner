@@ -88,7 +88,7 @@
     us30: "us30"
   };
 
-  let lastFetched = [];
+  let all_stocks_data = {};
   let currentSelection = [];
 
   window.addEventListener("load", async function () {
@@ -102,29 +102,19 @@
       }
     }
 
-    const cachedData = localStorage.getItem('lastFetchedData');
-    if (cachedData) {
-        lastFetched = JSON.parse(cachedData);
-        applySortAndShow();
-        renderCards(currentSelection);
-    } 
-    else {
-        await runScan(); // Only run scan if no cached data
-    }
-  });
-
-  scanBtn.addEventListener("click", async () => {
     await runScan();
   });
 
+  scanBtn.addEventListener("click", async () => {
+    applyFiltersAndRender();
+  });
+
   sortSelect.addEventListener("change", () => {
-    applySortAndShow();
-    renderCards(currentSelection);
+    applyFiltersAndRender();
   });
 
   showSelect.addEventListener("change", () => {
-    applySortAndShow();
-    renderCards(currentSelection);
+    applyFiltersAndRender();
   });
 
   function changeOptions() {
@@ -159,59 +149,61 @@
   }
 
   async function runScan() {
-    const sel = stockDropdown.value;
-    let url = "/api/calculate";
-
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
-
-    const params = new URLSearchParams();
-    if (sel === "custom") {
-      const raw = (document.getElementById("customSymbols").value || "").trim();
-      if (!raw) {
-        renderInfo("Enter some symbols to scan.");
-        return;
-      }
-      params.set("symbols", raw);
-    } else {
-      const listKey = LIST_MAP[sel] || sel;
-      params.set("list", listKey);
-    }
-
     renderLoading();
-
     try {
-        const res = await fetch(`${url}?${params.toString()}`, { signal: controller.signal });
+        // 1. Try to get data from browser's local storage
+        const cachedData = localStorage.getItem('allStocksData');
+        if (cachedData) {
+            all_stocks_data = JSON.parse(cachedData);
+            applyFiltersAndRender();
+            return;
+        }
+
+        // 2. If not in local storage, fetch from the server
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 60000);
+
+        const res = await fetch(`/api/calculate`, { signal: controller.signal });
         clearTimeout(timeout);
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-        // Inside the runScan function, after getting the data
+        
         const data = await res.json();
-        lastFetched = Array.isArray(data) ? data : [];
-        localStorage.setItem('lastFetchedData', JSON.stringify(lastFetched)); // Save to localStorage
-        applySortAndShow();
-        renderCards(currentSelection);
-    } 
-    catch (e) {
+        all_stocks_data = data;
+        
+        // 3. Store the fetched data in local storage
+        localStorage.setItem('allStocksData', JSON.stringify(all_stocks_data));
+        applyFiltersAndRender();
+
+    } catch (e) {
         console.error(e);
-        const cachedData = localStorage.getItem('lastFetchedData');
-        if (cachedData) {
-            lastFetched = JSON.parse(cachedData);
-            applySortAndShow();
-            renderCards(currentSelection);
-            renderError("Failed to fetch new data. Displaying last saved results.");
-        } else {
-            renderError(e.message || "Failed to fetch results.");
-        }
+        renderError(e.message || "Failed to fetch results.");
     }
   }
 
-  function applySortAndShow() {
-    const sortBy = sortSelect.value;
-    let arr = [...lastFetched];
+  function applyFiltersAndRender() {
+    const sel = stockDropdown.value;
+    let symbols_to_display;
 
-    // keep a copy of error messages
-    const errorItems = arr.filter(item => item.error);
-    arr = arr.filter(item => !item.error);
+    if (sel === "custom") {
+        const raw = (document.getElementById("customSymbols").value || "").trim().toUpperCase();
+        if (!raw) {
+            renderInfo("Enter some symbols to scan.");
+            return;
+        }
+        symbols_to_display = raw.split(",").map(s => s.trim());
+    } else {
+        const listKey = LIST_MAP[sel] || sel;
+        symbols_to_display = Object.keys(all_stocks_data); 
+    }
+    
+    let filtered_data = [];
+    for(const symbol of symbols_to_display) {
+        if(all_stocks_data[symbol]) {
+            filtered_data.push(all_stocks_data[symbol]);
+        }
+    }
+
+    const sortBy = sortSelect.value;
 
     const recRank = (r) => {
       if (!r) return 3;
@@ -226,44 +218,39 @@
 
     switch (sortBy) {
       case "recommend_avoid":
-        arr.sort((a, b) => recRank(a.recommendation) - recRank(b.recommendation));
+        filtered_data.sort((a, b) => recRank(a.recommendation) - recRank(b.recommendation));
         break;
       case "avoid_recommend":
-        arr.sort((a, b) => recRank(b.recommendation) - recRank(a.recommendation));
+        filtered_data.sort((a, b) => recRank(b.recommendation) - recRank(a.recommendation));
         break;
       case "next_earnings":
         const now = new Date();
-        const future = arr.filter(x => toDate(x.earnings_date_raw) && toDate(x.earnings_date_raw) >= now)
+        const future = filtered_data.filter(x => toDate(x.earnings_date_raw) && toDate(x.earnings_date_raw) >= now)
                           .sort((a, b) => toDate(a.earnings_date_raw) - toDate(b.earnings_date_raw));
-        const past = arr.filter(x => toDate(x.earnings_date_raw) && toDate(x.earnings_date_raw) < now)
+        const past = filtered_data.filter(x => toDate(x.earnings_date_raw) && toDate(x.earnings_date_raw) < now)
                         .sort((a, b) => toDate(b.earnings_date_raw) - toDate(a.earnings_date_raw));
-        const noDate = arr.filter(x => !x.earnings_date_raw || isNaN(toDate(x.earnings_date_raw)));
-        arr = [...future, ...past, ...noDate];
+        const noDate = filtered_data.filter(x => !x.earnings_date_raw || isNaN(toDate(x.earnings_date_raw)));
+        filtered_data = [...future, ...past, ...noDate];
         break;
       case "highest":
-        arr.sort((a, b) => toNum(b.forecasted_move, -1) - toNum(a.forecasted_move, -1));
+        filtered_data.sort((a, b) => toNum(b.forecasted_move, -1) - toNum(a.forecasted_move, -1));
         break;
       case "lowest":
-        arr.sort((a, b) => toNum(a.forecasted_move, 1e9) - toNum(b.forecasted_move, 1e9));
+        filtered_data.sort((a, b) => toNum(a.forecasted_move, 1e9) - toNum(b.forecasted_move, 1e9));
         break;
       case "a-z":
-        arr.sort((a, b) => (a.symbol || "").localeCompare(b.symbol || ""));
+        filtered_data.sort((a, b) => (a.symbol || "").localeCompare(b.symbol || ""));
         break;
       case "z-a":
-        arr.sort((a, b) => (b.symbol || "").localeCompare(a.symbol || ""));
+        filtered_data.sort((a, b) => (b.symbol || "").localeCompare(a.symbol || ""));
         break;
     }
-
-    currentSelection = arr;
+    currentSelection = filtered_data;
     currentPage = 1;
     const maxShow = parseInt(showSelect.value, 10) || 20;
     totalPages = Math.max(1, Math.ceil(currentSelection.length / maxShow));
-
-    // store error reason if no results
-    if (arr.length === 0 && errorItems.length > 0) {
-        currentSelection = [];
-        currentSelection.errorReason = errorItems[0].error || "Unknown error occurred";
-    }
+    
+    renderCards(currentSelection);
   }
 
   function renderLoading() {
@@ -301,7 +288,7 @@
 
   function renderCards(items) {
 
-    if (items.length === 0) { //incase the logic.py shows an error such as too many requests at once please be patient etc
+    if (items.length === 0) {
         let reason = items.errorReason || null;
         resultsGrid.innerHTML = `
         <div class="rounded-lg shadow-[0_0_10px_var(--bg-scanner)] p-6 col-span-full text-center">

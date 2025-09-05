@@ -11,16 +11,17 @@ app = Flask(__name__)
 # Simple in-memory cache of last good series
 _LAST_SERIES = []
 
-# caching our requests of volatility
+# Caching our requests of volatility
 CACHE = {}
+# Create a new cache for all stock data
+ALL_STOCKS_CACHE = {}
 
 def next_noon():
     """Return datetime for next 12 PM local time."""
     now = datetime.now()
-    tomorrow_noon = datetime(now.year, now.month, now.day, 12, 0)
-    if now >= tomorrow_noon:
-        tomorrow_noon += timedelta(days=1)
-    return tomorrow_noon
+    # Reset at midnight
+    tomorrow_midnight = datetime(now.year, now.month, now.day) + timedelta(days=1)
+    return tomorrow_midnight
 
 def get_cached(key):
     entry = CACHE.get(key)
@@ -30,6 +31,17 @@ def get_cached(key):
 
 def set_cached(key, data):
     CACHE[key] = {"data": data, "expiry": next_noon()}
+
+def get_all_stocks_cached():
+    """Get all stocks from the cache if not expired."""
+    entry = ALL_STOCKS_CACHE.get("all_stocks")
+    if entry and datetime.now() < entry["expiry"]:
+        return entry["data"]
+    return None
+
+def set_all_stocks_cached(data):
+    """Set the cache for all stocks."""
+    ALL_STOCKS_CACHE["all_stocks"] = {"data": data, "expiry": next_noon()}
 
 @app.route("/")
 def home():
@@ -44,18 +56,18 @@ def get_volatility():
     try:
         vix = yf.Ticker(ticker)
 
-        
+
         intraday = vix.history(period="1d", interval="1m") #grab historic data for volatility index "Daily" with "Minute" candles
         if not intraday.empty: #if results are not empty continue to grab data
             df = intraday[['Close']].reset_index()
-            
+
             if 'Datetime' in df.columns:
                 df.rename(columns={'Datetime': 'Date'}, inplace=True) #rename each datetime column attribute to date for better front-end fetch
-           
+
             df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d %H:%M:%S') #use pandas to manipulate date-time string to Year, Month, Day, Hour, Minutes, Seconds
             series = df[['Date', 'Close']].to_dict(orient="records") #array of dataframe to be stored as series, can be used as historic _LAST_SERIES
-            
-            _LAST_SERIES = series  
+
+            _LAST_SERIES = series
             return jsonify({"volatility_data": series, "mode": "intraday"})
 
         #If current data unavailable check historic data, change "Daily to 10 Days" and "Minute to Daily Candle"
@@ -65,11 +77,11 @@ def get_volatility():
             # keep only weekdays for security of data representation
             df = df[pd.to_datetime(df['Date']).dt.weekday < 5]
             df = df.tail(5)
-            
+
             df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')
             series = df[['Date', 'Close']].to_dict(orient="records")
-            
-            _LAST_SERIES = series  
+
+            _LAST_SERIES = series
             return jsonify({"volatility_data": series, "mode": "history"})
 
         #If both fetching data fails, return previously stored data else, empty chart.
@@ -82,52 +94,32 @@ def get_volatility():
         if _LAST_SERIES:
             return jsonify({"volatility_data": _LAST_SERIES, "mode": "cached"})
         return jsonify({"volatility_data": [], "mode": "error", "message": str(e)})
-    
-    
-    
-    
+
+
+
+
 # for calculating the stock option considerations
 
 @app.route("/api/calculate")
 def calculate():
     try:
-        list_name = request.args.get("list")
-        symbols = request.args.get("symbols")
+        # First, try to get all stock data from the server's cache
+        cached_data = get_all_stocks_cached()
+        if cached_data:
+            return jsonify(cached_data)
 
-        if list_name:
-            cache_key = ("list", list_name)
-            cached = get_cached(cache_key)
-            if cached:
-                return jsonify(cached)
+        # If not in cache, run the scanner for all stocks
+        all_symbols = set()
+        for stock_list in STOCK_LISTS.values():
+            all_symbols.update(stock_list)
 
-            symbols_list = STOCK_LISTS.get(list_name, [])
-            results = process_stock_list(symbols_list)
-            set_cached(cache_key, results)
-            return jsonify(results)
+        results = process_stock_list(list(all_symbols))
+        
+        # Convert the list of results to a dictionary for easier lookup
+        results_dict = {res["symbol"]: res for res in results if "error" not in res}
 
-        elif symbols:
-            requested = [s.strip().upper() for s in symbols.split(",")]
-            results = []
-            to_fetch = []
-
-            for sym in requested:
-                cached = get_cached(("symbol", sym))
-                if cached:
-                    results.append(cached)
-                else:
-                    to_fetch.append(sym)
-
-            if to_fetch:
-                fetched = process_stock_list(to_fetch)
-                for res in fetched:
-                    if "error" not in res:
-                        set_cached(("symbol", res["symbol"]), res)
-                    results.append(res)
-
-            return jsonify(results)
-
-        else:
-            return jsonify({"error": "No list or symbols provided"}), 400
+        set_all_stocks_cached(results_dict)
+        return jsonify(results_dict)
 
     except Exception as e:
         import traceback
