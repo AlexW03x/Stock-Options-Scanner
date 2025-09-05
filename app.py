@@ -98,12 +98,16 @@ def get_volatility():
 @app.route("/api/calculate")
 def calculate():
     try:
-        # First, try to get all stock data from the server's cache
-        cached_data = get_all_stocks_cached()
-        if cached_data:
-            return jsonify(cached_data)
+        # Check for a 'rescan' query parameter to bypass the cache
+        force_rescan = request.args.get('rescan', 'false').lower() == 'true'
 
-        # If not in cache, run the scanner for all stocks
+        # If not forcing a rescan, try to get all stock data from the server's cache
+        if not force_rescan:
+            cached_data = get_all_stocks_cached()
+            if cached_data:
+                return jsonify(cached_data)
+
+        # If not in cache or if rescan is forced, run the scanner for all stocks
         all_symbols = set()
         for stock_list in STOCK_LISTS.values():
             all_symbols.update(stock_list)

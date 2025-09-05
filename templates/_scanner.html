@@ -13,6 +13,7 @@
     </select>
 
     <button id="scanBtn" class="sour-gummy text-md text-white bg-[var(--bg-scanner2)] px-4 py-1 rounded-md hover:opacity-70 transition-all ease-in duration-150">Scan</button>
+    <button id="rescanBtn" class="sour-gummy text-md text-white bg-black/30 px-2 py-1 rounded-md hover:opacity-70 transition-all ease-in duration-150">↻</button>
   </div>
 
   <div id="customSymbolsContainer" class="w-[90%] lg:w-[400px] sm:w-[350px] min-h-[100px] h-auto mx-auto flex flex-col hidden">
@@ -64,6 +65,7 @@
   let customContainer = document.getElementById("customSymbolsContainer");
   let stockDropdown = document.getElementById("stockList");
   const scanBtn = document.getElementById("scanBtn");
+  const rescanBtn = document.getElementById("rescanBtn");
   const sortSelect = document.getElementById("sortOptions");
   const showSelect = document.getElementById("showOptions");
   const resultsGrid = document.getElementById("resultsGrid");
@@ -103,7 +105,7 @@
       }
     }
     // This will now run only once on page load
-    await runScan();
+    await runScan(false);
   });
 
   // *** FIX 1: Add event listener for the main dropdown ***
@@ -113,7 +115,11 @@
   });
 
   scanBtn.addEventListener("click", async () => {
-    applyFiltersAndRender();
+    runScan(false);
+  });
+  
+  rescanBtn.addEventListener("click", async () => {
+    runScan(true);
   });
 
   sortSelect.addEventListener("change", () => {
@@ -155,20 +161,24 @@
     window.open("https://www.tradingview.com/markets/stocks-usa/earnings/");
   }
 
-  async function runScan() {
+  async function runScan(forceRescan = false) {
     renderLoading();
     try {
-        const cachedData = localStorage.getItem('allStocksData');
-        if (cachedData) {
-            all_stocks_data = JSON.parse(cachedData);
-            applyFiltersAndRender();
-            return;
+        if (!forceRescan) {
+            const cachedData = localStorage.getItem('allStocksData');
+            if (cachedData) {
+                all_stocks_data = JSON.parse(cachedData);
+                applyFiltersAndRender();
+                return;
+            }
         }
 
         const controller = new AbortController();
         const timeout = setTimeout(() => controller.abort(), 60000);
 
-        const res = await fetch(`/api/calculate`, { signal: controller.signal });
+        const apiUrl = forceRescan ? `/api/calculate?rescan=true` : `/api/calculate`;
+
+        const res = await fetch(apiUrl, { signal: controller.signal });
         clearTimeout(timeout);
         if (!res.ok) throw new Error(`Request failed: ${res.status}`);
         
