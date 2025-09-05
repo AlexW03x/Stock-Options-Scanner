@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, send_file, send_from_directory
 from logic import process_stock_list # Updated logic.py from previous step
 from stocks import STOCK_LISTS
 import concurrent.futures
@@ -10,7 +10,6 @@ import json # Import the json library
 app = Flask(__name__)
 
 CACHE = {} #original cache for single stock data
-
 
 ALL_STOCKS_CACHE = {} #cache for all stocks data in the form of a dictionary for better information extraction and storage
 
@@ -121,6 +120,15 @@ def calculate():
         import traceback
         traceback.print_exc()   # print full error to server logs
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
+    
+    
+# code for downloading our calculator app seperately
+@app.route("/download-calculator")
+def download_calculator():
+    try:
+        return send_from_directory(directory='static', path='Alexs_Calculator.py', as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": f"File not found: {str(e)}"}), 404
 
 
 if __name__ == "__main__":

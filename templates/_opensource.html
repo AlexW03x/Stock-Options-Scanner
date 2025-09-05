@@ -1,4 +1,4 @@
-<div id="opensource" class="w-[100%] bg-[var(--bg-opensource)] min-h-[600px] h-auto mx-auto mt-4 rounded-lg mb-[100px] pb-[50px] drop-shadow-[0_0_5px_var(--dropshadow)]">
+<div id="opensource" class="w-[100%] bg-[var(--bg-opensource)] min-h-[600px] h-auto mx-auto mt-4 rounded-lg mb-[100px] pb-[30px] drop-shadow-[0_0_5px_var(--dropshadow)]">
     <div class="flex flex-row items-center justify-center h-[60px] w-full px-2">
         <p class="sour-gummy text-lg sm:text-xl lg:text-2xl text-[var(--text-colour)] font-bold">Open Source | Market Scanner</p>
         <p class="sour-gummy text-sm sm:text-md text-[var(--text-colour)] ml-4 sm:mt-1"><span class="animate-pulse text-[var(--dropshadow)]">⬤</span> v1.0.0</p>
@@ -23,4 +23,21 @@
                  a python script that can be used as an external application too if the user prefers to use that instead.
         </p>
     </div>
+
+    <div class="max-w-[300px] mx-auto grid grid-cols-2 gap-x-4 justify-center items-center mt-8 gap-y-[20px]">
+        <p class="text-[var(--text-colour)] text-md sour-gummy opacity-70">Github Repo:</p>
+        <button onClick="window.open('https://github.com/AlexW03x/Stock-Options-Scanner')" class="bg-blue-600 text-md sour-gummy text-white font-[400] px-6 py-1 rounded-md drop-shadow-[0_0_5px_black] hover:opacity-70 transition-all ease-in duration-150">View Github</button>
+
+        <p class="text-[var(--text-colour)] text-md sour-gummy opacity-70">My Own Scanner:</p>
+        <button onClick="downloadCalculator()" class="bg-blue-600 text-md sour-gummy text-white font-[400] px-6 py-1 rounded-md drop-shadow-[0_0_5px_black] hover:opacity-70 transition-all ease-in duration-150">Calculator.py</button>
+
+        <p class="text-[var(--text-colour)] text-md sour-gummy opacity-70">Vibe's Scanner:</p>
+        <button onClick="window.open('https://volatilityvibes.com/');" class="bg-blue-600 text-md sour-gummy text-white font-[400] px-6 py-1 rounded-md drop-shadow-[0_0_5px_black] hover:opacity-70 transition-all ease-in duration-150">Website</button>
+    </div>
 </div>
+
+<script type="text/javascript">
+    function downloadCalculator(){
+        window.location.href = "/download-calculator";
+    }
+</script>
