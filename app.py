@@ -9,11 +9,10 @@ import json # Import the json library
 
 app = Flask(__name__)
 
-# ... (caching functions remain the same) ...
-# Caching our requests of volatility
-CACHE = {}
-# Create a new cache for all stock data
-ALL_STOCKS_CACHE = {}
+CACHE = {} #original cache for single stock data
+
+
+ALL_STOCKS_CACHE = {} #cache for all stocks data in the form of a dictionary for better information extraction and storage
 
 def next_noon():
     """Return datetime for next 12 PM local time."""
@@ -38,16 +37,15 @@ def set_all_stocks_cached(data):
 def home():
     today = datetime.today().date()
     data = {
-        "date": today, 
-        "top_stocks": ["AAPL", "TSLA", "NVDA"],
+        "date": today, #extract todays date for front-end display
+        "top_stocks": ["AAPL", "TSLA", "NVDA"], #debug stock list to test the code
         # Add this line to pass the stock lists as a JSON string
         "stock_lists_json": json.dumps(STOCK_LISTS)
     }
     return render_template("index.html", data=data)
 
-# ... (get_volatility and calculate endpoints remain the same) ...
 
-@app.route("/api/get_volatility")
+@app.route("/api/get_volatility") #extract volatility index data for front-end charting
 def get_volatility():
     global _LAST_SERIES
     ticker = "^VIX"
