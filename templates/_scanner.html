@@ -101,7 +101,16 @@
         document.getElementById("customSymbols").value = localStorage.getItem("customSymbols");
       }
     }
-    await runScan();
+
+    const cachedData = localStorage.getItem('lastFetchedData');
+    if (cachedData) {
+        lastFetched = JSON.parse(cachedData);
+        applySortAndShow();
+        renderCards(currentSelection);
+    } 
+    else {
+        await runScan(); // Only run scan if no cached data
+    }
   });
 
   scanBtn.addEventListener("click", async () => {
@@ -172,17 +181,27 @@
     renderLoading();
 
     try {
-      const res = await fetch(`${url}?${params.toString()}`, { signal: controller.signal });
-      clearTimeout(timeout);
-      if (!res.ok) throw new Error(`Request failed: ${res.status}`);
-      const data = await res.json();
-
-      lastFetched = Array.isArray(data) ? data : [];
-      applySortAndShow();
-      renderCards(currentSelection);
-    } catch (e) {
-      console.error(e);
-      renderError(e.message || "Failed to fetch results.");
+        const res = await fetch(`${url}?${params.toString()}`, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) throw new Error(`Request failed: ${res.status}`);
+        // Inside the runScan function, after getting the data
+        const data = await res.json();
+        lastFetched = Array.isArray(data) ? data : [];
+        localStorage.setItem('lastFetchedData', JSON.stringify(lastFetched)); // Save to localStorage
+        applySortAndShow();
+        renderCards(currentSelection);
+    } 
+    catch (e) {
+        console.error(e);
+        const cachedData = localStorage.getItem('lastFetchedData');
+        if (cachedData) {
+            lastFetched = JSON.parse(cachedData);
+            applySortAndShow();
+            renderCards(currentSelection);
+            renderError("Failed to fetch new data. Displaying last saved results.");
+        } else {
+            renderError(e.message || "Failed to fetch results.");
+        }
     }
   }
 
@@ -368,8 +387,8 @@
     let recText = "⬤ " + (recommendation || "—");
     let recClass = "text-[var(--text-colour)]";
     if (recLower.includes("recommend")) recClass = "text-[var(--text-recommended)]";
-    else if (recLower.includes("consider")) recClass = "text-[var(--text-forecast)]";
-    else if (recLower.includes("avoid")) recClass = "text-[var(--text-colour)]";
+    else if (recLower.includes("consider")) recClass = "text-[var(--text-consider)]";
+    else if (recLower.includes("avoid")) recClass = "text-[var(--text-avoid)]";
 
     const imgSrc = logo_url && typeof logo_url === "string"
       ? logo_url
