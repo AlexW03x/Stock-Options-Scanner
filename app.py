@@ -94,35 +94,36 @@ def get_volatility():
 
 
 # for calculating the stock option considerations
-
 @app.route("/api/calculate")
 def calculate():
     try:
-        # Check for a 'rescan' query parameter to bypass the cache
         force_rescan = request.args.get('rescan', 'false').lower() == 'true'
+        print(f"Received request for /api/calculate. Rescan: {force_rescan}") # <-- ADD THIS
 
-        # If not forcing a rescan, try to get all stock data from the server's cache
         if not force_rescan:
             cached_data = get_all_stocks_cached()
             if cached_data:
+                print("Returning cached data.") # <-- ADD THIS
                 return jsonify(cached_data)
 
-        # If not in cache or if rescan is forced, run the scanner for all stocks
         all_symbols = set()
         for stock_list in STOCK_LISTS.values():
             all_symbols.update(stock_list)
 
+        print(f"Cache empty or rescan forced. Fetching data for {len(all_symbols)} symbols...") # <-- ADD THIS
         results = process_stock_list(list(all_symbols))
+        print(f"Finished fetching data. Found {len(results)} valid results.") # <-- ADD THIS
         
-        # Convert the list of results to a dictionary for easier lookup
         results_dict = {res["symbol"]: res for res in results if "error" not in res}
 
         set_all_stocks_cached(results_dict)
+        print("Data cached. Sending response.") # <-- ADD THIS
         return jsonify(results_dict)
 
     except Exception as e:
         import traceback
-        traceback.print_exc()   # print full error to server logs
+        traceback.print_exc()
+        print(f"An error occurred: {str(e)}") # <-- ADD THIS
         return jsonify({"error": f"Internal server error: {str(e)}"}), 500
     
     
